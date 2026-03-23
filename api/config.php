@@ -16,9 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 $host = "localhost";
-$db_name = "u688635524_mads";
-$username = "u688635524_mads";
-$password = "Achmad.12015.@";
+$db_name = "mads";
+$username = "root";
+$password = "";
 
 try {
     $conn = new PDO("mysql:host=" . $host . ";dbname=" . $db_name, $username, $password);
