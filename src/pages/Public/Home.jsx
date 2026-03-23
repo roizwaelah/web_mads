@@ -5,6 +5,7 @@ import Stats from '../../components/public/SectionStats';
 import SectionPengumuman from '../../components/public/SectionPengumuman';
 import SectionAgenda from '../../components/public/SectionAgenda';
 import SectionBerita from '../../components/public/SectionBerita';
+import { slugifyTitle } from '../../utils/content';
 
 export default function Home({ themeSettings, posts = [], announcements = [], agendas = [], gurus = [], prestasi = [], fasilitas = [], ekskul = [] }) {
   const navigate = useNavigate();
@@ -29,9 +30,17 @@ export default function Home({ themeSettings, posts = [], announcements = [], ag
       />
       
       {/* Meneruskan fungsi navigate ke section agar tombol "Lihat Semua" berfungsi */}
-      <SectionPengumuman announcements={announcements} goToAnnouncements={() => navigate('/pengumuman')} />
+      <SectionPengumuman
+        announcements={announcements}
+        goToAnnouncements={(item) => navigate(item ? `/pengumuman/${item.slug || slugifyTitle(item.title)}` : '/pengumuman')}
+      />
       <SectionAgenda agenda={agendas} goToAgenda={() => navigate('/agenda')} />
-      <SectionBerita latestPost={latestPost} otherPosts={otherPosts} readArticle={(post) => navigate(`/berita/${post.id}`)} goToArticles={() => navigate('/berita')} />
+      <SectionBerita
+        latestPost={latestPost}
+        otherPosts={otherPosts}
+        readArticle={(post) => navigate(`/berita/${post.slug || slugifyTitle(post.title)}`)}
+        goToArticles={() => navigate('/berita')}
+      />
     </main>
   );
 }
