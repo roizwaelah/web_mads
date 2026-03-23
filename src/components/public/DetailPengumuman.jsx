@@ -1,24 +1,30 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bell, Calendar, MessageCircle } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { setJsonLd, setSeoMeta } from '../../utils/seo';
-import { safeJson } from '../../utils/http';
+import { normalizeMediaUrl, safeJson } from '../../utils/http';
+import {
+  extractImageFromHtml,
+  resolveItemBySlug,
+  slugifyTitle,
+  stripHtml,
+} from '../../utils/content';
 
 export default function DetailPengumuman({ announcements = [] }) {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [remoteAnnouncement, setRemoteAnnouncement] = useState(null);
   const [loading, setLoading] = useState(announcements.length === 0);
   const navigate = useNavigate();
 
   const fetchAnnouncement = async (signal) => {
-    if (!id) return;
+    if (!slug) return;
     try {
-      const res = await fetch(`/api/announcements.php?id=${id}&ts=${Date.now()}`, {
+      const res = await fetch(`/api/announcements.php?slug=${encodeURIComponent(slug)}&ts=${Date.now()}`, {
         signal,
-        cache: "no-store",
+        cache: 'no-store',
       });
       const data = await safeJson(res);
-      if (data.status === "success") {
+      if (data.status === 'success') {
         const payload = data.data ?? data;
         const item = Array.isArray(payload) ? payload[0] : payload;
         setRemoteAnnouncement(item || null);
@@ -37,47 +43,48 @@ export default function DetailPengumuman({ announcements = [] }) {
       setLoading(false);
       return;
     }
-    if (!id) return;
+    if (!slug) return;
     const controller = new AbortController();
     fetchAnnouncement(controller.signal);
     return () => controller.abort();
-  }, [announcements, id]);
+  }, [announcements, slug]);
 
-  const announcementSource = announcements.length > 0 ? announcements : remoteAnnouncement ? [remoteAnnouncement] : [];
-  const activeData = announcementSource.find(a => a?.id?.toString() === id);
+  const announcementSource = useMemo(
+    () => (announcements.length > 0 ? announcements : remoteAnnouncement ? [remoteAnnouncement] : []),
+    [announcements, remoteAnnouncement],
+  );
+  const activeData = resolveItemBySlug(announcementSource, slug);
+  const itemSlug = activeData?.slug || slugifyTitle(activeData?.title);
 
   useEffect(() => {
     if (Array.isArray(announcements) && announcements.length > 0) return;
     const onAnnouncementsUpdated = () => fetchAnnouncement();
     const onStorage = (event) => {
-      if (event.key === "announcements-updated-at") fetchAnnouncement();
+      if (event.key === 'announcements-updated-at') fetchAnnouncement();
     };
     const onFocus = () => fetchAnnouncement();
-    window.addEventListener("announcements-updated", onAnnouncementsUpdated);
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("focus", onFocus);
+    window.addEventListener('announcements-updated', onAnnouncementsUpdated);
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onFocus);
     return () => {
-      window.removeEventListener("announcements-updated", onAnnouncementsUpdated);
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener('announcements-updated', onAnnouncementsUpdated);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
     };
-  }, [announcements, id]);
+  }, [announcements, slug]);
 
   useEffect(() => {
     if (!activeData?.id) return;
     const baseUrl = window.location.origin;
-    const url = window.location.href || `${baseUrl}/pengumuman/${activeData.id}`;
+    const url = `${baseUrl}/pengumuman/${itemSlug}`;
     const title = activeData.title || 'Pengumuman Sekolah';
-    const plain = (activeData.content || '')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const description = plain.slice(0, 160) || 'Pengumuman resmi sekolah.';
+    const description = stripHtml(activeData.content).slice(0, 160) || 'Pengumuman resmi sekolah.';
+    const image = normalizeMediaUrl(extractImageFromHtml(activeData.content) || '/favicon.png');
 
     setSeoMeta({
       title: `${title} | Pengumuman`,
       description,
-      image: '/favicon.png',
+      image,
       url,
       type: 'article',
     });
@@ -86,21 +93,21 @@ export default function DetailPengumuman({ announcements = [] }) {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: title,
+      image: [image],
       datePublished: activeData.date || undefined,
+      description,
       mainEntityOfPage: url,
     });
-  }, [activeData?.id]);
+  }, [activeData, itemSlug]);
 
   if (loading) return <div className="p-20 text-center">Memuat pengumuman...</div>;
   if (!activeData) return <div className="p-20 text-center">Pengumuman tidak ditemukan.</div>;
 
   const shareWhatsapp = () => {
-    const url = window.location.href;
-    const title = activeData.title || "Pengumuman";
-    const shareUrl = `https://wa.me/?text=${encodeURIComponent(
-      `${title} ${url}`,
-    )}`;
-    window.open(shareUrl, "_blank");
+    const url = `${window.location.origin}/pengumuman/${itemSlug}`;
+    const title = activeData.title || 'Pengumuman';
+    const shareUrl = `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`;
+    window.open(shareUrl, '_blank');
   };
 
   return (
@@ -152,4 +159,3 @@ export default function DetailPengumuman({ announcements = [] }) {
     </main>
   );
 }
-

@@ -2,6 +2,11 @@
 require_once __DIR__ . '/config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+function create_slug($string) {
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', (string)$string)));
+    return trim($slug, '-');
+}
 require_once __DIR__ . '/auth_middleware.php';
 
 if ($method !== 'GET') {
@@ -39,10 +44,25 @@ function sanitize_image($url) {
 
 // 1. MENGAMBIL DATA POS (GET)
 if ($method === 'GET') {
-    // Menambahkan kolom 'image' dalam query
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $slug = isset($_GET['slug']) ? create_slug($_GET['slug']) : '';
     $stmt = $conn->query("SELECT id, title, content, image, author, category, status, DATE_FORMAT(created_at, '%d/%m/%Y') AS date FROM posts ORDER BY id DESC");
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+    $posts = array_map(function ($post) {
+        $post['slug'] = create_slug($post['title'] ?? '');
+        return $post;
+    }, $posts);
+
+    if ($id > 0 || $slug !== '') {
+        $filtered = array_values(array_filter($posts, function ($post) use ($id, $slug) {
+            if ($id > 0 && intval($post['id']) === $id) return true;
+            if ($slug !== '' && ($post['slug'] ?? '') === $slug) return true;
+            return false;
+        }));
+        echo json_encode(["status" => "success", "data" => $filtered ? $filtered[0] : null]);
+        return;
+    }
+
     echo json_encode(["status" => "success", "data" => $posts]);
 }
 

@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { safeJson } from '../../utils/http';
+import { slugifyTitle } from '../../utils/content';
 
 export default function SectionAgenda({ agenda = [], goToAgenda }) {
   const navigate = useNavigate();
@@ -118,7 +119,7 @@ export default function SectionAgenda({ agenda = [], goToAgenda }) {
           {latestAgendas.map((item) => (
             <div
               key={item.id}
-              onClick={() => navigate(`/agenda/${item.id}`)}
+              onClick={() => navigate(`/agenda/${item.slug || slugifyTitle(item.title)}`)}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group cursor-pointer"
             >
               <div className="flex">

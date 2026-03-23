@@ -2,6 +2,7 @@
 import { ArrowRight, Clock, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { normalizeMediaUrl, safeJson } from '../../utils/http';
+import { slugifyTitle } from '../../utils/content';
 
 export default function SectionBerita({
   latestPost,
@@ -101,7 +102,7 @@ export default function SectionBerita({
 
   const handleReadArticle = (post) => {
     if (readArticle) return readArticle(post);
-    if (post?.id) return navigate(`/berita/${post.id}`);
+    if (post?.id) return navigate(`/berita/${post.slug || slugifyTitle(post.title)}`);
   };
 
   const handleGoToArticles = () => {

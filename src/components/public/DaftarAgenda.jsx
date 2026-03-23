@@ -3,6 +3,7 @@ import { MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { setJsonLd } from '../../utils/seo';
 import { safeJson } from '../../utils/http';
+import { slugifyTitle } from '../../utils/content';
 
 export default function DaftarAgenda({ agenda = [] }) {
   const [searchAgenda, setSearchAgenda] = useState('');
@@ -75,7 +76,7 @@ export default function DaftarAgenda({ agenda = [] }) {
     const items = filteredAgendas.slice(0, 20).map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `${baseUrl}/agenda/${item.id}`,
+      url: `${baseUrl}/agenda/${item.slug || slugifyTitle(item.title)}`,
       name: item.title,
     }));
     setJsonLd('agenda-list-schema', {
@@ -116,7 +117,7 @@ export default function DaftarAgenda({ agenda = [] }) {
           {filteredAgendas.map((item) => (
             <div 
               key={item.id}
-              onClick={() => navigate(`/agenda/${item.id}`)}
+              onClick={() => navigate(`/agenda/${item.slug || slugifyTitle(item.title)}`)}
               className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
             >
               <div className="bg-[#008e49] group-hover:bg-[#e09d00] transition-colors duration-300 p-6 text-center text-white relative overflow-hidden">

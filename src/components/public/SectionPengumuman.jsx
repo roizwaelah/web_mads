@@ -2,6 +2,7 @@
 import { Bell, ArrowRight, Megaphone, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { safeJson } from '../../utils/http';
+import { slugifyTitle } from '../../utils/content';
 
 export default function SectionPengumuman({ announcements = [], goToAnnouncements }) {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ export default function SectionPengumuman({ announcements = [], goToAnnouncement
 
   const handleGoToAnnouncements = (item) => {
     if (goToAnnouncements) return goToAnnouncements(item);
-    if (item?.id) return navigate(`/pengumuman/${item.id}`);
+    if (item?.id) return navigate(`/pengumuman/${item.slug || slugifyTitle(item.title)}`);
     navigate('/pengumuman');
   };
 

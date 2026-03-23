@@ -3,6 +3,11 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth_middleware.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
+function create_slug($string) {
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', (string)$string)));
+    return trim($slug, '-');
+}
+
 if ($method !== 'GET') {
     require_write_access(['Admin', 'Editor']);
 }
@@ -20,9 +25,25 @@ function sanitize_html($html) {
 }
 
 if ($method === 'GET') {
-    // Ambil data dan format tanggalnya
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $slug = isset($_GET['slug']) ? create_slug($_GET['slug']) : '';
     $stmt = $conn->query("SELECT id, title, description, event_date, DATE_FORMAT(event_date, '%d/%m/%Y') AS formatted_date, event_time, location, status FROM agendas ORDER BY event_date DESC");
     $agendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $agendas = array_map(function ($agenda) {
+        $agenda['slug'] = create_slug($agenda['title'] ?? '');
+        return $agenda;
+    }, $agendas);
+
+    if ($id > 0 || $slug !== '') {
+        $filtered = array_values(array_filter($agendas, function ($agenda) use ($id, $slug) {
+            if ($id > 0 && intval($agenda['id']) === $id) return true;
+            if ($slug !== '' && ($agenda['slug'] ?? '') === $slug) return true;
+            return false;
+        }));
+        echo json_encode(["status" => "success", "data" => $filtered ? $filtered[0] : null]);
+        return;
+    }
+
     echo json_encode(["status" => "success", "data" => $agendas]);
 }
 
@@ -69,6 +90,3 @@ elseif ($method === 'DELETE') {
     }
 }
 ?>
-
-
-

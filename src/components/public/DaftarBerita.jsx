@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, MapPin, FileText, Calendar, Clock, ArrowRight, Search, UserCircle } from 'lucide-react';
 import { setJsonLd } from '../../utils/seo';
 import { normalizeMediaUrl, safeJson } from '../../utils/http';
+import { slugifyTitle } from '../../utils/content';
 
 export default function DaftarBerita({ posts = [] }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,7 +77,7 @@ export default function DaftarBerita({ posts = [] }) {
     const items = filteredPosts.slice(0, 20).map((post, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `${baseUrl}/berita/${post.id}`,
+      url: `${baseUrl}/berita/${post.slug || slugifyTitle(post.title)}`,
       name: post.title,
     }));
     setJsonLd('berita-list-schema', {
@@ -116,7 +117,7 @@ export default function DaftarBerita({ posts = [] }) {
           {/* HERO ARTICLE */}
           {filteredPosts[0] && (
             <article
-              onClick={() => navigate(`/berita/${filteredPosts[0].id}`)}
+              onClick={() => navigate(`/berita/${filteredPosts[0].slug || slugifyTitle(filteredPosts[0].title)}`)}
               className="group cursor-pointer mb-10"
             >
               <div className="aspect-video overflow-hidden rounded-xl mb-4">
@@ -147,7 +148,7 @@ export default function DaftarBerita({ posts = [] }) {
             {filteredPosts.slice(1).map((post) => (
               <article
                 key={post.id}
-                onClick={() => navigate(`/berita/${post.id}`)}
+                onClick={() => navigate(`/berita/${post.slug || slugifyTitle(post.title)}`)}
                 className="group cursor-pointer"
               >
                 <div className="aspect-4/3 overflow-hidden rounded-lg mb-3">
@@ -186,7 +187,7 @@ export default function DaftarBerita({ posts = [] }) {
               {filteredPosts.slice(0,5).map((post, i) => (
                 <div
                   key={post.id}
-                  onClick={() => navigate(`/berita/${post.id}`)}
+                  onClick={() => navigate(`/berita/${post.slug || slugifyTitle(post.title)}`)}
                   className="flex gap-4 cursor-pointer group"
                 >
                   <div className="text-3xl font-bold text-gray-300 w-8">

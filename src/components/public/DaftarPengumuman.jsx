@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { safeJson } from '../../utils/http';
+import { slugifyTitle } from '../../utils/content';
 
 export default function DaftarPengumuman({ announcements = [] }) {
   const [searchPengumuman, setSearchPengumuman] = useState('');
@@ -105,7 +106,7 @@ export default function DaftarPengumuman({ announcements = [] }) {
             return (
               <div 
                 key={item.id}
-                onClick={() => navigate(`/pengumuman/${item.id}`)}
+                onClick={() => navigate(`/pengumuman/${item.slug || slugifyTitle(item.title)}`)}
                 className="group flex flex-col sm:flex-row gap-6 bg-white border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-emerald-100 transition-all duration-300 cursor-pointer"
               >
                 <div className="shrink-0 flex sm:flex-col items-center sm:justify-center gap-3 sm:gap-0 sm:w-24 sm:border-r border-gray-100 sm:pr-6">
