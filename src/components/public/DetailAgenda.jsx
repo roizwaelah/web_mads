@@ -1,18 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Calendar, Clock, MapPin, MessageCircle } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import { safeJson } from "../../utils/http";
+import { setJsonLd, setSeoMeta } from "../../utils/seo";
+import { normalizeMediaUrl, safeJson } from "../../utils/http";
+import {
+  extractImageFromHtml,
+  resolveItemBySlug,
+  slugifyTitle,
+  stripHtml,
+} from "../../utils/content";
 
 export default function DetailAgenda({ agenda = [] }) {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [remoteAgenda, setRemoteAgenda] = useState(null);
   const [loading, setLoading] = useState(agenda.length === 0);
 
   const fetchAgenda = async (signal) => {
-    if (!id) return;
+    if (!slug) return;
     try {
-      const res = await fetch(`/api/agenda.php?id=${id}&ts=${Date.now()}`, {
+      const res = await fetch(`/api/agenda.php?slug=${encodeURIComponent(slug)}&ts=${Date.now()}`, {
         signal,
         cache: "no-store",
       });
@@ -36,11 +43,11 @@ export default function DetailAgenda({ agenda = [] }) {
       setLoading(false);
       return;
     }
-    if (!id) return;
+    if (!slug) return;
     const controller = new AbortController();
     fetchAgenda(controller.signal);
     return () => controller.abort();
-  }, [agenda, id]);
+  }, [agenda, slug]);
 
   useEffect(() => {
     if (Array.isArray(agenda) && agenda.length > 0) return;
@@ -57,10 +64,49 @@ export default function DetailAgenda({ agenda = [] }) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, [agenda, id]);
+  }, [agenda, slug]);
 
-  const agendaSource = agenda.length > 0 ? agenda : remoteAgenda ? [remoteAgenda] : [];
-  const activeData = agendaSource.find((item) => item?.id?.toString() === id);
+  const agendaSource = useMemo(
+    () => (agenda.length > 0 ? agenda : remoteAgenda ? [remoteAgenda] : []),
+    [agenda, remoteAgenda],
+  );
+  const activeData = resolveItemBySlug(agendaSource, slug);
+  const itemSlug = activeData?.slug || slugifyTitle(activeData?.title);
+
+  useEffect(() => {
+    if (!activeData?.id) return;
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}/agenda/${itemSlug}`;
+    const title = activeData.title || "Agenda Madrasah";
+    const description = stripHtml(activeData.description).slice(0, 160) || "Agenda kegiatan resmi madrasah.";
+    const image = normalizeMediaUrl(extractImageFromHtml(activeData.description) || "/favicon.png");
+
+    setSeoMeta({
+      title: `${title} | Agenda`,
+      description,
+      image,
+      url,
+      type: "article",
+    });
+
+    setJsonLd(`agenda-${activeData.id}`, {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: title,
+      startDate: activeData.event_date || undefined,
+      eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+      eventStatus: "https://schema.org/EventScheduled",
+      image: [image],
+      location: activeData.location
+        ? {
+            "@type": "Place",
+            name: activeData.location,
+          }
+        : undefined,
+      description,
+      url,
+    });
+  }, [activeData, itemSlug]);
 
   if (loading) {
     return <div className="p-20 text-center">Memuat agenda...</div>;
@@ -71,11 +117,9 @@ export default function DetailAgenda({ agenda = [] }) {
   }
 
   const shareWhatsapp = () => {
-    const url = window.location.href;
+    const url = `${window.location.origin}/agenda/${itemSlug}`;
     const title = activeData.title || "Agenda";
-    const shareUrl = `https://wa.me/?text=${encodeURIComponent(
-      `${title} ${url}`,
-    )}`;
+    const shareUrl = `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`;
     window.open(shareUrl, "_blank");
   };
 

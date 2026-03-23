@@ -6,6 +6,11 @@ header('Content-Type: application/xml; charset=UTF-8');
 $baseUrl = rtrim(SITE_URL, '/');
 $now = date('c');
 
+function create_slug($string) {
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', (string)$string)));
+    return trim($slug, '-');
+}
+
 $urls = [];
 $urls[] = [
     'loc' => $baseUrl . '/',
@@ -39,33 +44,33 @@ $urls[] = [
 ];
 
 try {
-    $stmt = $conn->query("SELECT id, created_at FROM posts ORDER BY id DESC");
+    $stmt = $conn->query("SELECT id, title, created_at FROM posts ORDER BY id DESC");
     $posts = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     foreach ($posts as $post) {
         $urls[] = [
-            'loc' => $baseUrl . '/berita/' . $post['id'],
+            'loc' => $baseUrl . '/berita/' . create_slug($post['title'] ?? ''),
             'changefreq' => 'weekly',
             'priority' => '0.6',
             'lastmod' => !empty($post['created_at']) ? date('c', strtotime($post['created_at'])) : $now,
         ];
     }
 
-    $stmt = $conn->query("SELECT id, created_at FROM announcements ORDER BY id DESC");
+    $stmt = $conn->query("SELECT id, title, created_at FROM announcements ORDER BY id DESC");
     $announcements = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     foreach ($announcements as $item) {
         $urls[] = [
-            'loc' => $baseUrl . '/pengumuman/' . $item['id'],
+            'loc' => $baseUrl . '/pengumuman/' . create_slug($item['title'] ?? ''),
             'changefreq' => 'weekly',
             'priority' => '0.6',
             'lastmod' => !empty($item['created_at']) ? date('c', strtotime($item['created_at'])) : $now,
         ];
     }
 
-    $stmt = $conn->query("SELECT id, created_at FROM agendas ORDER BY id DESC");
+    $stmt = $conn->query("SELECT id, title, created_at FROM agendas ORDER BY id DESC");
     $agendas = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     foreach ($agendas as $item) {
         $urls[] = [
-            'loc' => $baseUrl . '/agenda/' . $item['id'],
+            'loc' => $baseUrl . '/agenda/' . create_slug($item['title'] ?? ''),
             'changefreq' => 'weekly',
             'priority' => '0.5',
             'lastmod' => !empty($item['created_at']) ? date('c', strtotime($item['created_at'])) : $now,

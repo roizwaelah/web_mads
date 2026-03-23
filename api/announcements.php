@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/config.php';
 $method = $_SERVER['REQUEST_METHOD'];
+
+function create_slug($string) {
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', (string)$string)));
+    return trim($slug, '-');
+}
 require_once __DIR__ . '/auth_middleware.php';
 
 if ($method !== 'GET') {
@@ -22,8 +27,23 @@ function sanitize_html($html) {
 
 // GET
 if ($method === 'GET') {
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $slug = isset($_GET['slug']) ? create_slug($_GET['slug']) : '';
     $stmt = $conn->query("SELECT id, title, content, author, status, DATE_FORMAT(created_at, '%d/%m/%Y') AS date FROM announcements ORDER BY id DESC");
     $announcements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $announcements = array_map(function ($item) {
+        $item['slug'] = create_slug($item['title'] ?? '');
+        return $item;
+    }, $announcements);
+    if ($id > 0 || $slug !== '') {
+        $filtered = array_values(array_filter($announcements, function ($item) use ($id, $slug) {
+            if ($id > 0 && intval($item['id']) === $id) return true;
+            if ($slug !== '' && ($item['slug'] ?? '') === $slug) return true;
+            return false;
+        }));
+        echo json_encode(["status" => "success", "data" => $filtered ? $filtered[0] : null]);
+        return;
+    }
     echo json_encode(["status" => "success", "data" => $announcements]);
 }
 

@@ -439,15 +439,15 @@ export default function App() {
             }
           />
           <Route path="berita" element={<DaftarBerita posts={posts} />} />
-          <Route path="berita/:id" element={<DetailBerita posts={posts} />} />
+          <Route path="berita/:slug" element={<DetailBerita posts={posts} />} />
           <Route path="agenda" element={<DaftarAgenda agenda={agendas} />} />
-          <Route path="agenda/:id" element={<DetailAgenda agenda={agendas} />} />
+          <Route path="agenda/:slug" element={<DetailAgenda agenda={agendas} />} />
           <Route
             path="pengumuman"
             element={<DaftarPengumuman announcements={announcements} />}
           />
           <Route
-            path="pengumuman/:id"
+            path="pengumuman/:slug"
             element={<DetailPengumuman announcements={announcements} />}
           />
           <Route path="/ekskul" element={<DaftarEkstrakulikuler ekskul={ekskul} />} />

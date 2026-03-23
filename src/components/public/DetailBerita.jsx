@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {ArrowLeft, Clock, UserCircle} from 'lucide-react';
 import { setJsonLd, setSeoMeta } from '../../utils/seo';
 import { normalizeMediaUrl, safeJson } from '../../utils/http';
+import { resolveItemBySlug, slugifyTitle, stripHtml } from '../../utils/content';
 
 export default function DetailBerita({ posts = [] }) {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { slug } = useParams();
   const [remotePost, setRemotePost] = useState(null);
   const [postLoading, setPostLoading] = useState(posts.length === 0);
   const [comments, setComments] = useState([]);
@@ -27,25 +28,25 @@ export default function DetailBerita({ posts = [] }) {
 
   useEffect(() => {
     if (Array.isArray(posts) && posts.length > 0) return;
-    if (!id) return;
+    if (!slug) return;
     try {
       const cachedList = localStorage.getItem("public-posts-cache");
       if (cachedList) {
         const parsed = JSON.parse(cachedList);
         if (Array.isArray(parsed)) {
-          const found = parsed.find((item) => item?.id?.toString() === id);
+          const found = resolveItemBySlug(parsed, slug);
           if (found) setRemotePost(found);
         }
       }
     } catch {
       // ignore
     }
-  }, [posts, id]);
+  }, [posts, slug]);
 
   const fetchPost = async (signal) => {
-    if (!id) return;
+    if (!slug) return;
     try {
-      const res = await fetch(`/api/posts.php?id=${id}&ts=${Date.now()}`, {
+      const res = await fetch(`/api/posts.php?slug=${encodeURIComponent(slug)}&ts=${Date.now()}`, {
         signal,
         cache: "no-store",
       });
@@ -85,11 +86,11 @@ export default function DetailBerita({ posts = [] }) {
       setPostLoading(false);
       return;
     }
-    if (!id) return;
+    if (!slug) return;
     const controller = new AbortController();
     fetchPost(controller.signal);
     return () => controller.abort();
-  }, [posts, id]);
+  }, [posts, slug]);
 
   useEffect(() => {
     if (Array.isArray(posts) && posts.length > 0) return;
@@ -108,10 +109,10 @@ export default function DetailBerita({ posts = [] }) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, [posts, id]);
+  }, [posts, slug]);
 
   const postSource = posts.length > 0 ? posts : remotePost ? [remotePost] : [];
-  const post = postSource.find(p => p?.id?.toString() === id);
+  const post = resolveItemBySlug(postSource, slug);
   const relatedPosts = post
     ? postSource.filter((item) => item.id !== post.id).slice(0, 3)
     : [];
@@ -162,17 +163,15 @@ export default function DetailBerita({ posts = [] }) {
     loadComments();
 
     return () => controller.abort();
-  }, [post?.id]);
+  }, [post]);
 
   useEffect(() => {
     if (!post?.id) return;
     const baseUrl = window.location.origin;
-    const url = window.location.href || `${baseUrl}/berita/${post.id}`;
+    const postSlug = post.slug || slugifyTitle(post.title);
+    const url = `${baseUrl}/berita/${postSlug}`;
     const title = post.title || 'Berita Sekolah';
-    const plain = (post.content || '')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const plain = stripHtml(post.content);
     const description = plain.slice(0, 160) || 'Berita terbaru sekolah.';
     const image = normalizeMediaUrl(post.image || post.img || '/favicon.png');
 
@@ -193,7 +192,7 @@ export default function DetailBerita({ posts = [] }) {
       author: post.author || 'Admin',
       mainEntityOfPage: url,
     });
-  }, [post?.id]);
+  }, [post]);
 
   const commentsByParent = useMemo(() => {
     const map = new Map();
@@ -382,7 +381,7 @@ export default function DetailBerita({ posts = [] }) {
             {relatedPosts.map((item) => (
               <article
                 key={item.id}
-                onClick={() => navigate(`/berita/${item.id}`)}
+                onClick={() => navigate(`/berita/${item.slug || slugifyTitle(item.title)}`)}
                 className="group cursor-pointer"
               >
 
