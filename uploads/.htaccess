@@ -1,0 +1,31 @@
+# ==================================================
+# uploads/.htaccess (strict upload hardening)
+# ==================================================
+
+Options -Indexes
+
+# Never execute scripts from uploads
+<FilesMatch "(?i)\.(?:php[0-9]?|phtml|phar|pl|py|cgi|asp|aspx|jsp|sh|bash|exe)$">
+    Require all denied
+</FilesMatch>
+
+# Force safe content-type for unknown files
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Disable PHP engine where supported
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<IfModule mod_mime.c>
+    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+</IfModule>
+
+# Cache static uploads
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 30 days"
+</IfModule>
