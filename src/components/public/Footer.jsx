@@ -52,29 +52,31 @@ export default function Footer({ themeSettings, isBlankTemplate }) {
           <h3 className="font-bold text-xl mb-6 tracking-wide border-b border-white/20 pb-3 inline-block">Sosial Media</h3>
           <div className="flex gap-3 mb-8">
             {themeSettings?.social?.facebook && (
-              <a href={themeSettings.social.facebook} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110">
+              <a aria-label="Facebook (membuka tab baru)" href={themeSettings.social.facebook} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300">
                 <Facebook className="w-5 h-5"/>
               </a>
             )}
             {themeSettings?.social?.twitter && (
-              <a href={themeSettings.social.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110">
+              <a aria-label="Twitter/X (membuka tab baru)" href={themeSettings.social.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300">
                 <Twitter className="w-5 h-5"/>
               </a>
             )}
             {themeSettings?.social?.instagram && (
-              <a href={themeSettings.social.instagram} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110">
+              <a aria-label="Instagram (membuka tab baru)" href={themeSettings.social.instagram} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300">
                 <Instagram className="w-5 h-5"/>
               </a>
             )}
             {themeSettings?.social?.youtube && (
-              <a href={themeSettings.social.youtube} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110">
+              <a aria-label="YouTube (membuka tab baru)" href={themeSettings.social.youtube} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-(--accent,#e09d00) hover:text-white transition shadow-sm hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300">
                 <Youtube className="w-5 h-5"/>
               </a>
             )}
           </div>
           <button 
+            type="button"
+            aria-label="Masuk ke halaman admin"
             onClick={() => navigate('/admin')} 
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-(--accent,#e09d00) hover:bg-white hover:text-(--primary,#008e49) border border-transparent rounded-lg transition-all font-semibold text-sm shadow-md cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-(--accent,#e09d00) hover:bg-white hover:text-(--primary,#008e49) border border-transparent rounded-lg transition-all font-semibold text-sm shadow-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300"
           >
             <User className="w-4 h-4" /> Login Operator
           </button>
@@ -88,4 +90,3 @@ export default function Footer({ themeSettings, isBlankTemplate }) {
     </footer>
   );
 }
-

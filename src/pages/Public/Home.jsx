@@ -17,7 +17,7 @@ export default function Home({ themeSettings, posts = [], announcements = [], ag
   const prestasiPosts = publishedPosts.filter(p => p.category === 'Prestasi');
 
   return (
-    <main className="flex-1 animate-[fadeIn_0.3s_ease-in]">
+    <main id="main-content" className="flex-1 animate-[fadeIn_0.3s_ease-in]">
       <Hero themeSettings={themeSettings} />
       <Stats
         gurus={gurus}
