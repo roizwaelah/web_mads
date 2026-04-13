@@ -381,7 +381,7 @@ const Documents = ({ showToast }) => {
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   required
                 />
-                <p className="text-[11px] text-gray-500 mt-1">Format: PDF, DOC, XLS. Maksimal 5MB.</p>
+                <p className="text-[11px] text-gray-500 mt-1">Format: PDF, DOC, XLS. Maksimal 100MB.</p>
               </div>
               
               <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">

@@ -70,8 +70,8 @@ if ($method === 'POST') {
         exit();
     }
 
-    if ($file_size > 5 * 1024 * 1024) {
-        echo json_encode(["status" => "error", "message" => "Ukuran file terlalu besar. Maksimal 5MB."]);
+    if ($file_size > 100 * 1024 * 1024) {
+        echo json_encode(["status" => "error", "message" => "Ukuran file terlalu besar. Maksimal 100MB."]);
         exit();
     }
 
