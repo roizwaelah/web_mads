@@ -1,4 +1,9 @@
 <?php
+$timezone = getenv('APP_TIMEZONE') ?: 'Asia/Jakarta';
+if (function_exists('date_default_timezone_set')) {
+    date_default_timezone_set($timezone);
+}
+
 $allowedOrigins = [
     'https://madarussalamcilongok.sch.id',
     'http://localhost:5173',
@@ -34,6 +39,7 @@ $password = getenv('DB_PASSWORD') ?: '';
 try {
     $conn = new PDO("mysql:host=" . $host . ";dbname=" . $db_name, $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn->exec("SET time_zone = '+07:00'");
 } catch (PDOException $exception) {
     echo json_encode(['status' => 'error', 'message' => 'Connection error: ' . $exception->getMessage()]);
     exit();
