@@ -5,6 +5,10 @@ import { TextBlock } from "./blocks/TextBlock";
 import { GuruBlock } from "./blocks/GuruBlock";
 import { ButtonBlock } from "./blocks/ButtonBlock";
 import { CardBlock } from "./blocks/CardBlock";
+import { FilesBlock } from "./blocks/FilesBlock";
+import { FacilityBlock } from "./blocks/FacilityBlock";
+import { RichTextBlock } from "./blocks/RichTextBlock";
+import { DataModuleBlock } from "./blocks/DataModuleBlock";
 import { GapBlock } from "./blocks/GapBlock";
 import { LayoutBlock } from "./blocks/LayoutBlock";
 import { SectionBlock } from "./blocks/SectionBlock";
@@ -30,6 +34,10 @@ const PublicPageRenderer = ({ data }) => {
           GuruBlock,
           ButtonBlock,
           CardBlock,
+          FilesBlock,
+          FacilityBlock,
+          RichTextBlock,
+          DataModuleBlock,
           GapBlock,
           LayoutBlock,
           SectionBlock,

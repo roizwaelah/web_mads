@@ -10,6 +10,13 @@ function sanitize_value($value) {
     return htmlspecialchars(trim((string)$value), ENT_QUOTES, 'UTF-8');
 }
 
+function decode_sanitized_value($value) {
+    if (is_array($value)) {
+        return array_map('decode_sanitized_value', $value);
+    }
+    return html_entity_decode((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
 function sanitize_field_name($str) {
     $name = strtolower(trim(preg_replace('/[^A-Za-z0-9_]+/', '_', (string)$str)));
     return trim($name, '_');
@@ -38,7 +45,7 @@ if ($method === 'GET') {
 
     $formatted = array_map(function($row) {
         $decoded = json_decode($row['data'], true);
-        $row['data'] = $decoded ? $decoded : [];
+        $row['data'] = $decoded ? decode_sanitized_value($decoded) : [];
         return $row;
     }, $rows);
 

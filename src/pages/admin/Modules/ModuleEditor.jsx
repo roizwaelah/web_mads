@@ -90,37 +90,46 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
   };
 
   useEffect(() => {
-    if (editing) {
-      setTitle(editing.title || "");
-      setSlug(editing.slug || "");
-      setDisplayType(editing.display_type || "table");
-      setGridColumns(editing.grid_columns || 3);
-      setSortField(editing.sort_field || "");
-      setSortDirection(editing.sort_direction || "asc");
-      setFields(
-        Array.isArray(editing.fields) && editing.fields.length > 0
-          ? editing.fields.map((f) =>
-              mkField({
-                label: f.label || "",
-                name: f.name || nameify(f.label),
-                type: f.type || "text",
-                required: Boolean(f.required),
-                options: f.options || "",
-              }),
-            )
-          : (TEMPLATE_FIELDS[editing.display_type || "table"] || TEMPLATE_FIELDS.table).map((f) =>
-              mkField(f),
-            ),
-      );
-    } else {
-      setTitle("");
-      setSlug("");
-      setDisplayType("table");
-      setGridColumns(3);
-      setSortField("");
-      setSortDirection("asc");
-      applyDisplayTemplate("table");
-    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+
+      if (editing) {
+        setTitle(editing.title || "");
+        setSlug(editing.slug || "");
+        setDisplayType(editing.display_type || "table");
+        setGridColumns(editing.grid_columns || 3);
+        setSortField(editing.sort_field || "");
+        setSortDirection(editing.sort_direction || "asc");
+        setFields(
+          Array.isArray(editing.fields) && editing.fields.length > 0
+            ? editing.fields.map((f) =>
+                mkField({
+                  label: f.label || "",
+                  name: f.name || nameify(f.label),
+                  type: f.type || "text",
+                  required: Boolean(f.required),
+                  options: f.options || "",
+                }),
+              )
+            : (TEMPLATE_FIELDS[editing.display_type || "table"] || TEMPLATE_FIELDS.table).map((f) =>
+                mkField(f),
+              ),
+        );
+      } else {
+        setTitle("");
+        setSlug("");
+        setDisplayType("table");
+        setGridColumns(3);
+        setSortField("");
+        setSortDirection("asc");
+        applyDisplayTemplate("table");
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [editing, id]);
 
   const canSave = useMemo(() => title.trim().length > 0, [title]);

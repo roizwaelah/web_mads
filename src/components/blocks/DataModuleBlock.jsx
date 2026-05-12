@@ -53,9 +53,6 @@ export const DataModuleBlock = ({ moduleId = "", showHeader = false }) => {
 
   useEffect(() => {
     if (!moduleId) {
-      setEntries([]);
-      setTotal(0);
-      setPage(1);
       return;
     }
     const active = modules.find((m) => String(m.id) === String(moduleId));
