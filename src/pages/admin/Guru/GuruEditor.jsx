@@ -47,15 +47,22 @@ const GuruEditor = ({
   const activeGuru = editingGuru || remoteGuru;
 
   useEffect(() => {
-    if (activeGuru) {
-      setName(activeGuru.name || "");
-      setRole(activeGuru.role || "");
-      setImg(activeGuru.img || "");
-    } else if (!id) {
-      setName("");
-      setRole("");
-      setImg("");
-    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      if (activeGuru) {
+        setName(activeGuru.name || "");
+        setRole(activeGuru.role || "");
+        setImg(activeGuru.img || "");
+      } else if (!id) {
+        setName("");
+        setRole("");
+        setImg("");
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [activeGuru, id]);
 
   const handleMediaSelect = (media) => {
@@ -98,7 +105,7 @@ const GuruEditor = ({
       } else {
         showToast(`Gagal: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       showToast("Koneksi ke server gagal.");
     }
   };

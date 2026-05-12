@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import { Bell, ArrowRight, Megaphone, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { safeJson } from '../../utils/http';
@@ -6,22 +6,21 @@ import { slugifyTitle } from '../../utils/content';
 
 export default function SectionPengumuman({ announcements = [], goToAnnouncements }) {
   const navigate = useNavigate();
-  const [remoteAnnouncements, setRemoteAnnouncements] = useState([]);
-
-  useEffect(() => {
-    if (Array.isArray(announcements) && announcements.length > 0) return;
+  const [remoteAnnouncements, setRemoteAnnouncements] = useState(() => {
+    if (Array.isArray(announcements) && announcements.length > 0) return [];
     try {
       const cached = localStorage.getItem("public-announcements-cache");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) setRemoteAnnouncements(parsed);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // ignore
     }
-  }, [announcements]);
+    return [];
+  });
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     try {
       const res = await fetch(`/api/announcements.php?ts=${Date.now()}`, {
         cache: 'no-store',
@@ -39,7 +38,7 @@ export default function SectionPengumuman({ announcements = [], goToAnnouncement
     } catch {
       // ignore
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (Array.isArray(announcements) && announcements.length > 0) return;
@@ -78,7 +77,7 @@ export default function SectionPengumuman({ announcements = [], goToAnnouncement
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchAnnouncements]);
 
   const announcementSource = announcements.length > 0 ? announcements : remoteAnnouncements;
   const latestAnnouncements = (announcementSource || [])

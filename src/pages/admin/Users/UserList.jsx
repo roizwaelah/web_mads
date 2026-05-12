@@ -1,12 +1,12 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Search, Edit2, Trash2, ShieldCheck } from 'lucide-react';
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { getActivityLogs } from "../../../utils/auth";
 import { EDITOR_MENU_LIST } from "../../../utils/rbac";
 import { safeJson } from "../../../utils/http";
 
-const UserList = ({ onEdit, showToast, currentUser, editorMenuAccess = {}, onEditorMenuAccessChange }) => {
+const UserList = ({ showToast, currentUser, editorMenuAccess = {}, onEditorMenuAccessChange }) => {
   const navigate = useNavigate();
   const { openModal } = useModal();
   const [users, setUsers] = useState([]);
@@ -17,17 +17,17 @@ const UserList = ({ onEdit, showToast, currentUser, editorMenuAccess = {}, onEdi
   const [activityLogs, setActivityLogs] = useState([]);
   const selectAllRef = useRef(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch(`/api/users.php?ts=${Date.now()}`, { cache: "no-store" });
       const result = await safeJson(res);
       if (result.status === "success") setUsers(result.data);
-    } catch (error) {
+    } catch {
       showToast("Gagal mengambil data pengguna");
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchUsers();
@@ -38,7 +38,7 @@ const UserList = ({ onEdit, showToast, currentUser, editorMenuAccess = {}, onEdi
       window.removeEventListener("users-updated", refresh);
       window.removeEventListener("focus", refresh);
     };
-  }, []);
+  }, [fetchUsers]);
   useEffect(() => {
     setActivityLogs(getActivityLogs().slice(0, 8));
   }, []);
@@ -60,7 +60,7 @@ const UserList = ({ onEdit, showToast, currentUser, editorMenuAccess = {}, onEdi
           } else {
             showToast(result.message || "Gagal menghapus pengguna");
           }
-        } catch (error) {
+        } catch {
           showToast("Gagal menyambung ke server");
         }
       },
@@ -138,7 +138,7 @@ const UserList = ({ onEdit, showToast, currentUser, editorMenuAccess = {}, onEdi
   const handleToggleEditorMenuAccess = (menu) => {
     const next = {
       ...editorMenuAccess,
-      [menu]: !Boolean(editorMenuAccess[menu]),
+      [menu]: !editorMenuAccess[menu],
     };
     onEditorMenuAccessChange?.(next);
   };

@@ -57,21 +57,28 @@ const EkskulEditor = ({
   const activeEkskul = editingEkskul || remoteEkskul;
 
   useEffect(() => {
-    if (activeEkskul) {
-      setName(activeEkskul.name || "");
-      setDescription(activeEkskul.description || "");
-      setImage(activeEkskul.image || activeEkskul.img || "");
-      setCoach(activeEkskul.coach || "");
-      setSchedule(activeEkskul.schedule || "");
-      setCategory(activeEkskul.category || "");
-    } else if (!id) {
-      setName("");
-      setDescription("");
-      setImage("");
-      setCoach("");
-      setSchedule("");
-      setCategory("");
-    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      if (activeEkskul) {
+        setName(activeEkskul.name || "");
+        setDescription(activeEkskul.description || "");
+        setImage(activeEkskul.image || activeEkskul.img || "");
+        setCoach(activeEkskul.coach || "");
+        setSchedule(activeEkskul.schedule || "");
+        setCategory(activeEkskul.category || "");
+      } else if (!id) {
+        setName("");
+        setDescription("");
+        setImage("");
+        setCoach("");
+        setSchedule("");
+        setCategory("");
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [activeEkskul, id]);
 
   const handleMediaSelect = (media) => {
@@ -129,7 +136,7 @@ const EkskulEditor = ({
       } else {
         showToast(`Gagal: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       showToast("Koneksi ke server gagal.");
     }
   };

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {ArrowLeft, Clock, UserCircle} from 'lucide-react';
 import { setJsonLd, setSeoMeta } from '../../utils/seo';
@@ -43,7 +43,7 @@ export default function DetailBerita({ posts = [] }) {
     }
   }, [posts, slug]);
 
-  const fetchPost = async (signal) => {
+  const fetchPost = useCallback(async (signal) => {
     if (!slug) return;
     try {
       const res = await fetch(`/api/posts.php?slug=${encodeURIComponent(slug)}&ts=${Date.now()}`, {
@@ -79,7 +79,7 @@ export default function DetailBerita({ posts = [] }) {
         setPostLoading(false);
       }
     }
-  };
+  }, [slug]);
 
   useEffect(() => {
     if (Array.isArray(posts) && posts.length > 0) {
@@ -90,7 +90,7 @@ export default function DetailBerita({ posts = [] }) {
     const controller = new AbortController();
     fetchPost(controller.signal);
     return () => controller.abort();
-  }, [posts, slug]);
+  }, [posts, slug, fetchPost]);
 
   useEffect(() => {
     if (Array.isArray(posts) && posts.length > 0) return;
@@ -109,7 +109,7 @@ export default function DetailBerita({ posts = [] }) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, [posts, slug]);
+  }, [posts, fetchPost]);
 
   const postSource = posts.length > 0 ? posts : remotePost ? [remotePost] : [];
   const post = resolveItemBySlug(postSource, slug);

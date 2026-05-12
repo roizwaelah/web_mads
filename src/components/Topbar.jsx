@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Menu, BrainCog, LogOut } from 'lucide-react';
-import { useModal } from '../context/ModalContext';
+import { useModal } from '../context/modalContextValue';
 
 const Topbar = ({ toggleSidebar, onLogout, currentUser }) => {
   const { openModal } = useModal();

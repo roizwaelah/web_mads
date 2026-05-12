@@ -49,15 +49,22 @@ const AnnouncementEditor = ({
   const activeAnnouncement = editingAnnouncement || remoteAnnouncement;
 
   useEffect(() => {
-    if (activeAnnouncement) {
-      setTitle(activeAnnouncement.title || "");
-      setContent(activeAnnouncement.content || "");
-      setAuthor(activeAnnouncement.author || "Admin");
-    } else if (!id) {
-      setTitle("");
-      setContent("");
-      setAuthor("Admin");
-    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      if (activeAnnouncement) {
+        setTitle(activeAnnouncement.title || "");
+        setContent(activeAnnouncement.content || "");
+        setAuthor(activeAnnouncement.author || "Admin");
+      } else if (!id) {
+        setTitle("");
+        setContent("");
+        setAuthor("Admin");
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [activeAnnouncement, id]);
 
   const handleInsertMedia = (mediaItem) => {
@@ -116,7 +123,7 @@ const AnnouncementEditor = ({
       } else {
         showToast(`Gagal: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       showToast("Koneksi ke server gagal.");
     }
   };

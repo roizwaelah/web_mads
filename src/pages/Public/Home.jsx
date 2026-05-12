@@ -7,7 +7,7 @@ import SectionAgenda from '../../components/public/SectionAgenda';
 import SectionBerita from '../../components/public/SectionBerita';
 import { slugifyTitle } from '../../utils/content';
 
-export default function Home({ themeSettings, posts = [], announcements = [], agendas = [], gurus = [], prestasi = [], fasilitas = [], ekskul = [] }) {
+export default function Home({ themeSettings, posts = [], announcements = [], agendas = [], gurus = [], fasilitas = [], ekskul = [] }) {
   const navigate = useNavigate();
 
   // Filter Publish

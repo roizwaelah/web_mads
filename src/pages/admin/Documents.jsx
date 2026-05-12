@@ -1,8 +1,8 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FileText, File, Plus, Trash2, Download, X } from 'lucide-react';
 
 import { safeJson } from '../../utils/http';
-import { useModal } from "../../context/ModalContext";
+import { useModal } from "../../context/modalContextValue";
 
 const PAGE_SIZE = 10;
 
@@ -23,7 +23,7 @@ const Documents = ({ showToast }) => {
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Ambil data dokumen dari API
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/documents.php?ts=${Date.now()}`, { cache: "no-store" });
@@ -36,11 +36,11 @@ const Documents = ({ showToast }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
   const filteredDocs = useMemo(() => {
     if (!searchQuery) return documents;
@@ -105,7 +105,7 @@ const Documents = ({ showToast }) => {
             setSelectedIds([]);
             setBulkAction("");
             showToast("Dokumen berhasil dihapus!");
-          } catch (error) {
+          } catch {
             showToast("Gagal menghapus dokumen.");
           }
         },
@@ -156,7 +156,7 @@ const Documents = ({ showToast }) => {
       } else {
         showToast(result.message || "Gagal mengunggah dokumen.");
       }
-    } catch (error) {
+    } catch {
       showToast("Terjadi kesalahan koneksi.");
     } finally {
       setUploading(false);
@@ -183,7 +183,7 @@ const Documents = ({ showToast }) => {
           } else {
             showToast(result.message || "Gagal menghapus dokumen.");
           }
-        } catch (error) {
+        } catch {
           showToast("Gagal menghapus dokumen.");
         }
       },

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { safeJson } from '../../utils/http';
@@ -6,22 +6,21 @@ import { slugifyTitle } from '../../utils/content';
 
 export default function SectionAgenda({ agenda = [], goToAgenda }) {
   const navigate = useNavigate();
-  const [remoteAgendas, setRemoteAgendas] = useState([]);
-
-  useEffect(() => {
-    if (Array.isArray(agenda) && agenda.length > 0) return;
+  const [remoteAgendas, setRemoteAgendas] = useState(() => {
+    if (Array.isArray(agenda) && agenda.length > 0) return [];
     try {
       const cached = localStorage.getItem("public-agendas-cache");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) setRemoteAgendas(parsed);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // ignore
     }
-  }, [agenda]);
+    return [];
+  });
 
-  const fetchAgendas = async () => {
+  const fetchAgendas = useCallback(async () => {
     try {
       const res = await fetch(`/api/agenda.php?ts=${Date.now()}`, {
         cache: 'no-store',
@@ -39,7 +38,7 @@ export default function SectionAgenda({ agenda = [], goToAgenda }) {
     } catch {
       // ignore
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (Array.isArray(agenda) && agenda.length > 0) return;
@@ -78,7 +77,7 @@ export default function SectionAgenda({ agenda = [], goToAgenda }) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchAgendas]);
 
   const agendaSource = agenda.length > 0 ? agenda : remoteAgendas;
   const latestAgendas = (agendaSource || [])

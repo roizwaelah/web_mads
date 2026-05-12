@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { Image as ImageIcon, Medal, Plus } from "lucide-react";
 import { safeJson } from "../../../utils/http";
 
@@ -16,31 +16,27 @@ const EkskulList = ({ showToast, ekskul, setEkskul }) => {
   const didFetchRef = useRef(false);
   const selectAllRef = useRef(null);
 
+  const loadEkskul = useCallback(async () => {
+    if (typeof setEkskul !== "function") return;
+    try {
+      const res = await fetch(`/api/ekskul.php?ts=${Date.now()}`, { cache: "no-store" });
+      const data = await safeJson(res);
+      if (data.status === "success") {
+        setEkskul(data.data || []);
+      } else {
+        showToast?.(data.message || "Gagal memuat data ekskul.");
+      }
+    } catch {
+      showToast?.("Koneksi server gagal.");
+    }
+  }, [setEkskul, showToast]);
+
   useEffect(() => {
     if (didFetchRef.current) return;
     didFetchRef.current = true;
     if (Array.isArray(ekskul) && ekskul.length > 0) return;
-    if (typeof setEkskul !== "function") return;
-    let active = true;
-    const loadEkskul = async () => {
-      try {
-        const res = await fetch(`/api/ekskul.php?ts=${Date.now()}`, { cache: "no-store" });
-        const data = await safeJson(res);
-        if (!active) return;
-        if (data.status === "success") {
-          setEkskul(data.data || []);
-        } else {
-          showToast?.(data.message || "Gagal memuat data ekskul.");
-        }
-      } catch {
-        if (active) showToast?.("Koneksi server gagal.");
-      }
-    };
     loadEkskul();
-    return () => {
-      active = false;
-    };
-  }, []);
+  }, [ekskul, loadEkskul]);
 
   const filteredEkskul = useMemo(() => {
     if (!search) return ekskul;
@@ -145,7 +141,7 @@ const EkskulList = ({ showToast, ekskul, setEkskul }) => {
           } else {
             showToast(result.message);
           }
-        } catch (error) {
+        } catch {
           showToast("Koneksi ke server gagal.");
         }
       },

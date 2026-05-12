@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Calendar, Clock, MapPin, MessageCircle } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { setJsonLd, setSeoMeta } from "../../utils/seo";
@@ -16,7 +16,7 @@ export default function DetailAgenda({ agenda = [] }) {
   const [remoteAgenda, setRemoteAgenda] = useState(null);
   const [loading, setLoading] = useState(agenda.length === 0);
 
-  const fetchAgenda = async (signal) => {
+  const fetchAgenda = useCallback(async (signal) => {
     if (!slug) return;
     try {
       const res = await fetch(`/api/agenda.php?slug=${encodeURIComponent(slug)}&ts=${Date.now()}`, {
@@ -36,7 +36,7 @@ export default function DetailAgenda({ agenda = [] }) {
         setLoading(false);
       }
     }
-  };
+  }, [slug]);
 
   useEffect(() => {
     if (Array.isArray(agenda) && agenda.length > 0) {
@@ -47,7 +47,7 @@ export default function DetailAgenda({ agenda = [] }) {
     const controller = new AbortController();
     fetchAgenda(controller.signal);
     return () => controller.abort();
-  }, [agenda, slug]);
+  }, [agenda, slug, fetchAgenda]);
 
   useEffect(() => {
     if (Array.isArray(agenda) && agenda.length > 0) return;
@@ -64,7 +64,7 @@ export default function DetailAgenda({ agenda = [] }) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, [agenda, slug]);
+  }, [agenda, fetchAgenda]);
 
   const agendaSource = useMemo(
     () => (agenda.length > 0 ? agenda : remoteAgenda ? [remoteAgenda] : []),

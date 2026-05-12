@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bell, Calendar, MessageCircle } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { setJsonLd, setSeoMeta } from '../../utils/seo';
@@ -16,7 +16,7 @@ export default function DetailPengumuman({ announcements = [] }) {
   const [loading, setLoading] = useState(announcements.length === 0);
   const navigate = useNavigate();
 
-  const fetchAnnouncement = async (signal) => {
+  const fetchAnnouncement = useCallback(async (signal) => {
     if (!slug) return;
     try {
       const res = await fetch(`/api/announcements.php?slug=${encodeURIComponent(slug)}&ts=${Date.now()}`, {
@@ -36,7 +36,7 @@ export default function DetailPengumuman({ announcements = [] }) {
         setLoading(false);
       }
     }
-  };
+  }, [slug]);
 
   useEffect(() => {
     if (Array.isArray(announcements) && announcements.length > 0) {
@@ -47,7 +47,7 @@ export default function DetailPengumuman({ announcements = [] }) {
     const controller = new AbortController();
     fetchAnnouncement(controller.signal);
     return () => controller.abort();
-  }, [announcements, slug]);
+  }, [announcements, slug, fetchAnnouncement]);
 
   const announcementSource = useMemo(
     () => (announcements.length > 0 ? announcements : remoteAnnouncement ? [remoteAnnouncement] : []),
@@ -71,7 +71,7 @@ export default function DetailPengumuman({ announcements = [] }) {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('focus', onFocus);
     };
-  }, [announcements, slug]);
+  }, [announcements, fetchAnnouncement]);
 
   useEffect(() => {
     if (!activeData?.id) return;

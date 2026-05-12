@@ -1,6 +1,6 @@
-﻿import { useState, useRef, useEffect, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { List, LayoutGrid, FileText, Plus, Pin, X } from "lucide-react";
 import { safeJson } from "../../../utils/http";
 
@@ -18,7 +18,7 @@ const PostList = ({ showToast, posts, setPosts }) => {
 
   const selectAllRef = useRef(null);
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     if (typeof setPosts !== "function") return;
     try {
       const res = await fetch(`/api/posts.php?ts=${Date.now()}`, { cache: "no-store" });
@@ -31,14 +31,14 @@ const PostList = ({ showToast, posts, setPosts }) => {
     } catch {
       showToast?.("Koneksi server gagal.");
     }
-  };
+  }, [setPosts, showToast]);
 
   useEffect(() => {
     if (didFetchRef.current) return;
     didFetchRef.current = true;
     if (Array.isArray(posts) && posts.length > 0) return;
     fetchPosts();
-  }, []);
+  }, [posts, fetchPosts]);
 
   useEffect(() => {
     const onPostsUpdated = () => fetchPosts();
@@ -54,7 +54,7 @@ const PostList = ({ showToast, posts, setPosts }) => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchPosts]);
 
   /* ---------------- SEARCH FILTER ---------------- */
 

@@ -7,7 +7,6 @@ import { slugifyTitle } from '../../utils/content';
 
 export default function DaftarBerita({ posts = [] }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [listView, setListView] = useState('grid');
   const [remotePosts, setRemotePosts] = useState([]);
   const navigate = useNavigate();
 

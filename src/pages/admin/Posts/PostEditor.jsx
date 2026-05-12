@@ -62,20 +62,27 @@ const PostEditor = ({ showToast, setPosts, posts, mediaItems }) => {
   const activePost = editingPost || remotePost;
 
   useEffect(() => {
-    if (activePost && !title) {
-      setTitle(activePost.title || "");
-      setContent(activePost.content || "");
-      setCategory(activePost.category || "Berita Utama");
-      setAuthor(activePost.author || "Admin");
-      setImage(activePost.image || activePost.img || "");
-    } else if (!id) {
-      setTitle("");
-      setContent("");
-      setCategory("Berita Utama");
-      setAuthor("Admin");
-      setImage("");
-    }
-  }, [activePost, id]);
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      if (activePost && !title) {
+        setTitle(activePost.title || "");
+        setContent(activePost.content || "");
+        setCategory(activePost.category || "Berita Utama");
+        setAuthor(activePost.author || "Admin");
+        setImage(activePost.image || activePost.img || "");
+      } else if (!id) {
+        setTitle("");
+        setContent("");
+        setCategory("Berita Utama");
+        setAuthor("Admin");
+        setImage("");
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [activePost, id, title]);
 
   // FUNGSI UTAMA PENYISIPAN MEDIA
   const handleInsertMedia = (mediaItem) => {
@@ -153,7 +160,7 @@ const PostEditor = ({ showToast, setPosts, posts, mediaItems }) => {
       } else {
         showToast?.(`Gagal: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       showToast?.("Koneksi ke server gagal.");
     }
   };

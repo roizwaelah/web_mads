@@ -73,9 +73,14 @@ const SchoolabKit = ({
   };
 
   useEffect(() => {
-    if (themeSettings) {
-      setFormData({ ...defaultSettings, ...themeSettings });
-    }
+    if (!themeSettings) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) setFormData({ ...defaultSettings, ...themeSettings });
+    });
+    return () => {
+      active = false;
+    };
   }, [themeSettings]);
 
   const tabs = [
@@ -177,7 +182,7 @@ const SchoolabKit = ({
       } else {
         showToast?.(`Gagal: ${result.message}`, "error");
       }
-    } catch (error) {
+    } catch {
       showToast?.("Terjadi kesalahan koneksi ke server.", "error");
     }
   };

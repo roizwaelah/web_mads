@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Database, Plus, X } from "lucide-react";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import MediaModal from "../../../components/ui/MediaModal";
 
 const PAGE_SIZE = 10;

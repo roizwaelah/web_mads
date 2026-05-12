@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import { Save, ArrowLeft, Key, UserCircle, Trash2 } from 'lucide-react';
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { sanitizePlainText, validateStrongPassword, validateUsername } from "../../../utils/security";
 import { safeJson } from "../../../utils/http";
 
@@ -44,7 +44,7 @@ const UserEditor = ({ showToast }) => {
         } else {
           showToast?.(result.message || "Gagal memuat data pengguna.");
         }
-      } catch (error) {
+      } catch {
         showToast?.("Gagal menyambung ke server");
       } finally {
         setLoading(false);
@@ -85,7 +85,7 @@ const UserEditor = ({ showToast }) => {
       } else {
         showToast(result.message || "Terjadi kesalahan");
       }
-    } catch (error) {
+    } catch {
       showToast("Gagal menyambung ke server");
     }
   };
@@ -181,7 +181,7 @@ const UserEditor = ({ showToast }) => {
                         } else {
                           showToast(result.message || "Gagal menghapus pengguna");
                         }
-                      } catch (error) {
+                      } catch {
                         showToast("Gagal menyambung ke server");
                       }
                     },

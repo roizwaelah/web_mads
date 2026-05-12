@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { CalendarDays, Plus } from "lucide-react";
 import { safeJson } from "../../../utils/http";
 
@@ -17,7 +17,7 @@ const AgendaList = ({ navigate, showToast, agendas, setAgendas }) => {
   const didFetchRef = useRef(false);
   const selectAllRef = useRef(null);
 
-  const fetchAgendas = async () => {
+  const fetchAgendas = useCallback(async () => {
     if (typeof setAgendas !== "function") return;
     try {
       const res = await fetch(`/api/agenda.php?ts=${Date.now()}`, { cache: "no-store" });
@@ -30,14 +30,14 @@ const AgendaList = ({ navigate, showToast, agendas, setAgendas }) => {
     } catch {
       showToast?.("Koneksi server gagal.");
     }
-  };
+  }, [setAgendas, showToast]);
 
   useEffect(() => {
     if (didFetchRef.current) return;
     didFetchRef.current = true;
     if (Array.isArray(agendas) && agendas.length > 0) return;
     fetchAgendas();
-  }, []);
+  }, [agendas, fetchAgendas]);
 
   useEffect(() => {
     const onAgendasUpdated = () => fetchAgendas();
@@ -53,7 +53,7 @@ const AgendaList = ({ navigate, showToast, agendas, setAgendas }) => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchAgendas]);
 
   const filteredAgendas = useMemo(() => {
     if (!search) return agendas;
@@ -175,7 +175,7 @@ const AgendaList = ({ navigate, showToast, agendas, setAgendas }) => {
           } else {
             showToast(result.message);
           }
-        } catch (error) {
+          } catch {
           showToast("Koneksi ke server gagal.");
         }
       },

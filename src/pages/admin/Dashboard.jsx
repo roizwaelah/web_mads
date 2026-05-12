@@ -1,12 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pin, FileText, Users, LayoutDashboard, Sparkles, CalendarDays, Rocket } from 'lucide-react';
 
 const Dashboard = ({
   navigate,
-  showToast,
   posts = [],
-  setPosts = () => {},
   themeSettings,
   pages = [],
   gurus = [],

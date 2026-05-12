@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { Megaphone, Plus } from "lucide-react";
 import { safeJson } from "../../../utils/http";
 
@@ -22,7 +22,7 @@ const AnnouncementList = ({
   const didFetchRef = useRef(false);
   const selectAllRef = useRef(null);
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     if (typeof setAnnouncements !== "function") return;
     try {
       const res = await fetch(`/api/announcements.php?ts=${Date.now()}`, { cache: "no-store" });
@@ -35,14 +35,14 @@ const AnnouncementList = ({
     } catch {
       showToast?.("Koneksi server gagal.");
     }
-  };
+  }, [setAnnouncements, showToast]);
 
   useEffect(() => {
     if (didFetchRef.current) return;
     didFetchRef.current = true;
     if (Array.isArray(announcements) && announcements.length > 0) return;
     fetchAnnouncements();
-  }, []);
+  }, [announcements, fetchAnnouncements]);
 
   useEffect(() => {
     const onAnnouncementsUpdated = () => fetchAnnouncements();
@@ -58,7 +58,7 @@ const AnnouncementList = ({
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchAnnouncements]);
 
   const filteredAnnouncements = useMemo(() => {
     if (!search) return announcements;
@@ -180,7 +180,7 @@ const AnnouncementList = ({
           } else {
             showToast(result.message);
           }
-        } catch (error) {
+          } catch {
           showToast("Koneksi ke server gagal.");
         }
       },

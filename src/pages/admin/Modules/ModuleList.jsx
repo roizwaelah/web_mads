@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { Database, Plus } from "lucide-react";
 
 const ModuleList = ({ modules = [], setModules = () => {}, showToast }) => {

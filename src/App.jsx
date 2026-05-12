@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import PublicLayout from "./layouts/PublicLayout";
 import AdminLayout from "./layouts/AdminLayout";
@@ -98,17 +98,8 @@ export default function App() {
   const [ekskul, setEkskul] = useState([]);
   const [gurus, setGurus] = useState([]);
   const [facilities, setFacilities] = useState([]);
-  const [prestasi, setPrestasi] = useState([]);
   const [comments, setComments] = useState([]);
   const [modules, setModules] = useState([]);
-
-  // State untuk menampung pos mana yang sedang diedit
-  const [editingPost, setEditingPost] = useState(null);
-  const [editingPage, setEditingPage] = useState(null);
-  const [editingAgenda, setEditingAgenda] = useState(null);
-  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [editingEkskul, setEditingEkskul] = useState(null);
-  const [editingGuru, setEditingGuru] = useState(null);
 
   const [themeSettings, setThemeSettings] = useState({
     logoUrl: "",
@@ -134,15 +125,15 @@ export default function App() {
   const userRole = currentUser?.role || "Editor";
   const isReadOnlyUser = userRole === "Read-Only" || userRole === "Demo";
 
-  const showToast = (message, type = "success") => {
+  const showToast = useCallback((message, type = "success") => {
     setToast({ show: true, message, type });
 
     setTimeout(() => {
       setToast((prev) => ({ ...prev, show: false }));
     }, 3000);
-  };
+  }, []);
 
-  const logout = (reason = "Anda telah keluar.") => {
+  const logout = useCallback((reason = "Anda telah keluar.") => {
     fetch("/api/auth.php?action=logout", {
       method: "POST",
       credentials: "include",
@@ -153,7 +144,7 @@ export default function App() {
     addActivityLog("logout", reason);
     showToast(reason, "success");
     navigate("/login");
-  };
+  }, [navigate, showToast]);
 
   const handleLoginRequest = async ({ username, password, rememberMe }) => {
     const cleanedUsername = sanitizePlainText(username);
@@ -350,7 +341,7 @@ export default function App() {
       if (idleTimer) clearTimeout(idleTimer);
       events.forEach((name) => window.removeEventListener(name, resetIdleTimer));
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, logout]);
 
   useEffect(() => {
     if (!isAuthenticated || !location.pathname.startsWith("/admin")) return;
@@ -399,7 +390,7 @@ export default function App() {
     return () => {
       window.fetch = originalFetch;
     };
-  }, [isAuthenticated, isReadOnlyUser, authSession?.token]);
+  }, [isAuthenticated, isReadOnlyUser, authSession?.token, showToast]);
 
   const editorDeniedPaths = useMemo(() => ["/admin/schoolab", "/admin/users"], []);
 

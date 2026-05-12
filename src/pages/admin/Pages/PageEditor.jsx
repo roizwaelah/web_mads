@@ -1,5 +1,5 @@
 ﻿
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { Editor, Frame, Element, useEditor } from "@craftjs/core";
 import { useNavigate, useParams } from "react-router-dom";
 import { 
@@ -166,7 +166,7 @@ const HistoryControls = () => {
 
 // --- KOMPONEN UTAMA ---
 
-const PageEditor = ({ navigate, showToast, pages, setPages, modules = [] }) => {
+const PageEditor = ({ navigate, showToast, pages, setPages }) => {
   const { id } = useParams();
   const routerNavigate = useNavigate();
   const goTo = typeof navigate === "function" ? navigate : routerNavigate;
@@ -339,7 +339,7 @@ const PageEditor = ({ navigate, showToast, pages, setPages, modules = [] }) => {
     const [savedSnapshot, setSavedSnapshot] = useState("");
     const [isDirty, setIsDirty] = useState(false);
 
-    const buildSnapshot = (contentJson) =>
+    const buildSnapshot = useCallback((contentJson) =>
       JSON.stringify({
         title,
         slug,
@@ -351,7 +351,7 @@ const PageEditor = ({ navigate, showToast, pages, setPages, modules = [] }) => {
         dataModuleId: dataModuleId || "",
         formSchema: pageType === "form" ? formSchema : null,
         content: contentJson || "",
-      });
+      }), [author, breadcrumbs, dataModuleId, formSchema, litespeed, pageType, slug, template, title]);
 
     useEffect(() => {
       const current = buildSnapshot(query.serialize());
@@ -371,9 +371,9 @@ const PageEditor = ({ navigate, showToast, pages, setPages, modules = [] }) => {
       litespeed,
       pageType,
       dataModuleId,
-      formSchema,
       savedSnapshot,
       query,
+      buildSnapshot,
     ]);
 
     const handleSave = async () => {
@@ -421,7 +421,7 @@ const PageEditor = ({ navigate, showToast, pages, setPages, modules = [] }) => {
           return;
         }
         showToast?.(result.message || "Gagal menyimpan laman.");
-      } catch (error) {
+      } catch {
         showToast?.("Koneksi gagal.");
       }
     };

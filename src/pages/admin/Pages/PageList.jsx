@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { FileText, Plus } from "lucide-react";
 import { safeJson } from "../../../utils/http";
 
@@ -43,7 +43,7 @@ const PageList = ({ showToast, pages, setPages }) => {
     }
   }, [selectedIds, filteredPages.length]);
 
-  const fetchPages = async () => {
+  const fetchPages = useCallback(async () => {
     if (typeof setPages !== "function") return;
     try {
       const res = await fetch(`/api/pages.php?ts=${Date.now()}`, { cache: "no-store" });
@@ -56,14 +56,14 @@ const PageList = ({ showToast, pages, setPages }) => {
     } catch {
       showToast?.("Koneksi server gagal.");
     }
-  };
+  }, [setPages, showToast]);
 
   useEffect(() => {
     if (didFetchRef.current) return;
     didFetchRef.current = true;
     if (Array.isArray(pages) && pages.length > 0) return;
     fetchPages();
-  }, []);
+  }, [pages, fetchPages]);
 
   useEffect(() => {
     const onPagesUpdated = () => fetchPages();
@@ -79,7 +79,7 @@ const PageList = ({ showToast, pages, setPages }) => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchPages]);
 
   const handleDelete = (id) => {
     openModal({
@@ -101,7 +101,7 @@ const PageList = ({ showToast, pages, setPages }) => {
           } else {
             showToast(result.message);
           }
-        } catch (error) {
+        } catch {
           showToast("Koneksi ke server gagal.");
         }
       },

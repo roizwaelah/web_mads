@@ -83,7 +83,7 @@ export default function Header({ themeSettings }) {
     setIsMobileMenuOpen(false);
   };
 
-  const DesktopNavLinks = ({ extraClass = "" }) => (
+  const renderDesktopNavLinks = (extraClass = "") => (
     <nav
       aria-label="Navigasi utama"
       className={`hidden lg:flex items-center h-full gap-4 font-semibold text-sm justify-end flex-1 ${extraClass}`}
@@ -146,7 +146,7 @@ export default function Header({ themeSettings }) {
     </nav>
   );
 
-  const LogoBlock = () => (
+  const renderLogoBlock = () => (
     <Link to="/" aria-label={`Kembali ke beranda ${schoolName}`} className="flex items-center gap-3 cursor-pointer shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300" onClick={() => setIsMobileMenuOpen(false)}>
       <img src={logoSrc} alt={`Logo ${schoolName}`} className="w-12 h-12 object-contain" />
       <span className="font-bold text-2xl hidden sm:block text-(--bg-site) uppercase tracking-tight">
@@ -155,7 +155,7 @@ export default function Header({ themeSettings }) {
     </Link>
   );
 
-  const ActionBlock = ({ forceHamburger = false }) => (
+  const renderActionBlock = (forceHamburger = false) => (
     <div className="flex items-center gap-4">
       <button
         type="button"
@@ -189,22 +189,22 @@ export default function Header({ themeSettings }) {
       {headerStyle === 'centered' ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-3">
           <div className="flex items-center justify-center">
-            <LogoBlock />
+            {renderLogoBlock()}
           </div>
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <DesktopNavLinks extraClass="pr-6 lg:pr-10" />
+              {renderDesktopNavLinks("pr-6 lg:pr-10")}
             </div>
-            <ActionBlock />
+            {renderActionBlock()}
           </div>
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <LogoBlock />
+          {renderLogoBlock()}
 
-          {headerStyle === 'hamburger' ? null : <DesktopNavLinks extraClass="pr-2 lg:pr-3" />}
+          {headerStyle === 'hamburger' ? null : renderDesktopNavLinks("pr-2 lg:pr-3")}
 
-          <ActionBlock forceHamburger={headerStyle === 'hamburger'} />
+          {renderActionBlock(headerStyle === 'hamburger')}
         </div>
       )}
 

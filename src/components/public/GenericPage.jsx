@@ -18,7 +18,7 @@ import { ImageBlock } from '../blocks/ImageBlock';
 import { DividerBlock } from '../blocks/DividerBlock';
 import { safeJson } from '../../utils/http';
 
-export default function GenericPage({ pages = [], gurus = [] }) {
+export default function GenericPage({ pages = [] }) {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({});
@@ -179,7 +179,7 @@ export default function GenericPage({ pages = [], gurus = [] }) {
     return () => controller.abort();
   }, [activeData?.data_module_id, modulePage]);
 
-  const renderComingSoon = (title) => (
+  const renderComingSoon = () => (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-300 my-8 shadow-sm">
       <div className="relative mb-8">
         <div className="absolute -inset-4 bg-blue-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
@@ -211,7 +211,7 @@ export default function GenericPage({ pages = [], gurus = [] }) {
 
     // Template Coming Soon
     if (isContentEmpty && activeData?.page_type !== "form" && !activeData?.data_module_id) {
-      return renderComingSoon(decodedTitle);
+      return renderComingSoon();
     }
 
     if (isContentEmpty && (activeData?.page_type === "form" || activeData?.data_module_id)) {

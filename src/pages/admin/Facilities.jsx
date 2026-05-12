@@ -1,7 +1,7 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Trash2, Edit3, Image as ImageIcon, Building } from 'lucide-react';
 import MediaModal from '../../components/ui/MediaModal';
-import { useModal } from "../../context/ModalContext";
+import { useModal } from "../../context/modalContextValue";
 import { safeJson } from "../../utils/http";
 
 const Facilities = ({ showToast, mediaItems }) => {
@@ -18,13 +18,15 @@ const Facilities = ({ showToast, mediaItems }) => {
   // Form State
   const [formData, setFormData] = useState({ name: '', description: '', image: '' });
 
-  const fetchFacilities = async () => {
+  const fetchFacilities = useCallback(async () => {
     const res = await fetch(`/api/facilities.php?ts=${Date.now()}`, { cache: "no-store" });
     const result = await safeJson(res).catch(() => ({}));
     if (result.status === "success") setFacilities(result.data);
-  };
+  }, []);
 
-  useEffect(() => { fetchFacilities(); }, []);
+  useEffect(() => {
+    queueMicrotask(fetchFacilities);
+  }, [fetchFacilities]);
 
   const filteredFacilities = useMemo(() => {
     if (!search) return facilities;

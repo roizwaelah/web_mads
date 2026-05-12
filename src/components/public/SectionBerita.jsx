@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import { ArrowRight, Clock, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { normalizeMediaUrl, safeJson } from '../../utils/http';
@@ -11,22 +11,21 @@ export default function SectionBerita({
   goToArticles,
 }) {
   const navigate = useNavigate();
-  const [remotePosts, setRemotePosts] = useState([]);
-
-  useEffect(() => {
-    if (latestPost || otherPosts.length > 0) return;
+  const [remotePosts, setRemotePosts] = useState(() => {
+    if (latestPost || otherPosts.length > 0) return [];
     try {
       const cached = localStorage.getItem("public-posts-cache");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) setRemotePosts(parsed);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // ignore
     }
-  }, [latestPost, otherPosts]);
+    return [];
+  });
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts.php?ts=${Date.now()}`, {
         cache: 'no-store',
@@ -44,7 +43,7 @@ export default function SectionBerita({
     } catch {
       // ignore
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (latestPost || otherPosts.length > 0) return;
@@ -83,7 +82,7 @@ export default function SectionBerita({
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [fetchPosts]);
 
   const postSource =
     latestPost || otherPosts.length > 0
@@ -162,7 +161,7 @@ export default function SectionBerita({
           <div className="lg:col-span-5 flex flex-col divide-y">
             {derivedOthers.map((post) => (
               <article
-                key={post.id || Math.random()}
+                key={post.id || post.slug || post.title}
                 onClick={() => handleReadArticle(post)}
                 className="flex gap-4 py-4 group cursor-pointer"
               >

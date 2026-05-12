@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 import { User, Users, Plus, X } from "lucide-react";
 import { safeJson } from "../../../utils/http";
 
@@ -17,31 +17,27 @@ const GuruList = ({ navigate, showToast, gurus, setGurus }) => {
   const didFetchRef = useRef(false);
   const selectAllRef = useRef(null);
 
+  const loadGurus = useCallback(async () => {
+    if (typeof setGurus !== "function") return;
+    try {
+      const res = await fetch(`/api/gurus.php?ts=${Date.now()}`, { cache: "no-store" });
+      const data = await safeJson(res);
+      if (data.status === "success") {
+        setGurus(data.data || []);
+      } else {
+        showToast?.(data.message || "Gagal memuat data guru.");
+      }
+    } catch {
+      showToast?.("Koneksi server gagal.");
+    }
+  }, [setGurus, showToast]);
+
   useEffect(() => {
     if (didFetchRef.current) return;
     didFetchRef.current = true;
     if (Array.isArray(gurus) && gurus.length > 0) return;
-    if (typeof setGurus !== "function") return;
-    let active = true;
-    const loadGurus = async () => {
-      try {
-        const res = await fetch(`/api/gurus.php?ts=${Date.now()}`, { cache: "no-store" });
-        const data = await safeJson(res);
-        if (!active) return;
-        if (data.status === "success") {
-          setGurus(data.data || []);
-        } else {
-          showToast?.(data.message || "Gagal memuat data guru.");
-        }
-      } catch {
-        if (active) showToast?.("Koneksi server gagal.");
-      }
-    };
     loadGurus();
-    return () => {
-      active = false;
-    };
-  }, []);
+  }, [gurus, loadGurus]);
 
   const filteredGurus = useMemo(() => {
     if (!search) return gurus;
@@ -145,7 +141,7 @@ const GuruList = ({ navigate, showToast, gurus, setGurus }) => {
           } else {
             showToast(result.message);
           }
-        } catch (error) {
+        } catch {
           showToast("Koneksi ke server gagal.");
         }
       },

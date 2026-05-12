@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from "react";
+﻿import React, { useCallback, useRef, useState, useEffect } from "react";
 import { normalizeMediaUrl, safeJson } from "../../../utils/http";
 import {
   Image as ImageIcon,
@@ -10,7 +10,7 @@ import {
   X
 } from "lucide-react";
 
-import { useModal } from "../../../context/ModalContext";
+import { useModal } from "../../../context/modalContextValue";
 
 const API = "/api/media.php";
 
@@ -38,7 +38,7 @@ const MediaList = ({ showToast }) => {
      LOAD MEDIA (LAZY)
   =============================== */
 
-  const loadMedia = async (pageNumber = 1, reset = false) => {
+  const loadMedia = useCallback(async (pageNumber = 1, reset = false) => {
 
     let url = `${API}?page=${pageNumber}&limit=20&ts=${Date.now()}`;
 
@@ -57,7 +57,7 @@ const MediaList = ({ showToast }) => {
 
       setHasMore(data.pagination.has_more);
     }
-  };
+  }, [filter]);
 
 
 
@@ -67,7 +67,7 @@ const MediaList = ({ showToast }) => {
 
   useEffect(() => {
     loadMedia(1, true);
-  }, [filter]);
+  }, [loadMedia]);
 
 
 
@@ -134,7 +134,7 @@ const MediaList = ({ showToast }) => {
         showToast?.(data.message);
       }
 
-    } catch (err) {
+    } catch {
 
       showToast?.("Upload gagal");
 

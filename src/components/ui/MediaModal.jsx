@@ -34,7 +34,7 @@ const MediaModal = ({ isOpen, onClose, mediaItems = [], onInsert, onUploadSucces
           setLibraryItems([]);
           setLibraryError(data?.message || "Gagal memuat pustaka media.");
         }
-      } catch (err) {
+      } catch {
         if (!active) return;
         setLibraryItems([]);
         setLibraryError("Gagal memuat pustaka media.");

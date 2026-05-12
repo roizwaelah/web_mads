@@ -44,19 +44,26 @@ const AgendaEditor = ({ showToast, setAgendas, agendas }) => {
   const activeAgenda = editingAgenda || remoteAgenda;
 
   useEffect(() => {
-    if (activeAgenda) {
-      setTitle(activeAgenda.title || '');
-      setDescription(activeAgenda.description || '');
-      setEventDate(activeAgenda.event_date || '');
-      setEventTime(activeAgenda.event_time || '');
-      setLocation(activeAgenda.location || '');
-    } else if (!id) {
-      setTitle('');
-      setDescription('');
-      setEventDate('');
-      setEventTime('');
-      setLocation('');
-    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      if (activeAgenda) {
+        setTitle(activeAgenda.title || '');
+        setDescription(activeAgenda.description || '');
+        setEventDate(activeAgenda.event_date || '');
+        setEventTime(activeAgenda.event_time || '');
+        setLocation(activeAgenda.location || '');
+      } else if (!id) {
+        setTitle('');
+        setDescription('');
+        setEventDate('');
+        setEventTime('');
+        setLocation('');
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [activeAgenda, id]);
 
   const handleSave = async (statusTujuan) => {
@@ -96,7 +103,7 @@ const AgendaEditor = ({ showToast, setAgendas, agendas }) => {
       } else {
         showToast(`Gagal: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       showToast('Koneksi ke server gagal.');
     }
   };

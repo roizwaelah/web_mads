@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Modal } from "./modalContextValue";
 
-const Modal = createContext();
-
-export const useModal = () => useContext(Modal);
+const MotionBackdrop = motion.div;
+const MotionPanel = motion.div;
 
 export const ModalProvider = ({ children }) => {
   const [modal, setModal] = useState({
@@ -62,14 +62,14 @@ const ModalComponent = ({ title, content, onConfirm, confirmText, cancelText, is
 
   return (
     <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 sm:p-0">
-      <motion.div
+      <MotionBackdrop
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <motion.div 
+      <MotionPanel 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -100,7 +100,7 @@ const ModalComponent = ({ title, content, onConfirm, confirmText, cancelText, is
             </button>
           )}
         </div>
-      </motion.div>
+      </MotionPanel>
     </div>
   );
 };
