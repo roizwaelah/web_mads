@@ -124,8 +124,16 @@ export default function GenericPage({ pages = [], gurus = [] }) {
   }, [activeData?.page_type, activeData?.id]);
 
   useEffect(() => {
-    if (!activeData?.data_module_id) return;
     setModulePage(1);
+  }, [activeData?.data_module_id]);
+
+  useEffect(() => {
+    if (!activeData?.data_module_id) {
+      setModuleConfig(null);
+      setModuleEntries([]);
+      setModuleTotal(0);
+      return;
+    }
     const controller = new AbortController();
     const loadModuleData = async () => {
       try {
@@ -136,7 +144,7 @@ export default function GenericPage({ pages = [], gurus = [] }) {
         const dataModules = await safeJson(resModules);
         if (dataModules.status === "success") {
           found = (dataModules.data || []).find(
-            (m) => m.id === activeData.data_module_id,
+            (m) => String(m.id) === String(activeData.data_module_id),
           );
           setModuleConfig(found || null);
         } else {
@@ -418,11 +426,23 @@ export default function GenericPage({ pages = [], gurus = [] }) {
           <tbody className="divide-y divide-gray-200">
             {items.map((entry) => (
               <tr key={entry.id}>
-                {fields.map((field) => (
-                  <td key={field.name} className="p-3 text-gray-600">
-                    <span style={textStyleForField(field)}>{entry.data?.[field.name] || "-"}</span>
-                  </td>
-                ))}
+                {fields.map((field) => {
+                  const value = entry.data?.[field.name];
+                  return (
+                    <td key={field.name} className="p-3 text-gray-600">
+                      {field.type === "image" && value && looksLikeImage(value) ? (
+                        <img
+                          src={value}
+                          alt={field.label}
+                          className="h-14 w-20 rounded-lg object-cover border border-gray-200"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span style={textStyleForField(field)}>{value || "-"}</span>
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

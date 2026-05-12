@@ -11,6 +11,13 @@ function sanitize_text($str) {
     return htmlspecialchars(trim((string)$str), ENT_QUOTES, 'UTF-8');
 }
 
+function sanitize_field_options($value) {
+    if (is_array($value) || is_object($value)) {
+        return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+    return trim((string)$value);
+}
+
 function sanitize_slug($str) {
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', (string)$str)));
     return trim($slug, '-');
@@ -46,6 +53,7 @@ if ($method === 'GET') {
     $fieldsByModule = [];
     foreach ($fields as $field) {
         $field['required'] = (bool)$field['required'];
+        $field['options'] = html_entity_decode($field['options'] ?? '', ENT_QUOTES, 'UTF-8');
         $fieldsByModule[$field['module_id']][] = $field;
     }
 
@@ -119,7 +127,7 @@ if ($method === 'POST') {
             $name = !empty($field->name) ? sanitize_field_name($field->name) : sanitize_field_name($label);
             $type = sanitize_text($field->type ?? 'text');
             $required = !empty($field->required) ? 1 : 0;
-            $options = sanitize_text($field->options ?? '');
+            $options = sanitize_field_options($field->options ?? '');
             $insert->execute([$moduleId, $label, $name, $type, $required, $options, $order]);
             $order++;
         }

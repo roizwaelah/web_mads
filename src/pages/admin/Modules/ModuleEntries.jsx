@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Database, Plus, X } from "lucide-react";
 import { useModal } from "../../../context/ModalContext";
@@ -43,7 +43,7 @@ const ModuleEntries = ({ modules = [], showToast }) => {
   const { openModal } = useModal();
 
   const moduleId = id ? parseInt(id, 10) : 0;
-  const moduleData = modules.find((m) => m.id === moduleId);
+  const moduleData = modules.find((m) => String(m.id) === String(moduleId));
 
   const [entries, setEntries] = useState([]);
   const [entryValues, setEntryValues] = useState({});
@@ -61,11 +61,22 @@ const ModuleEntries = ({ modules = [], showToast }) => {
     [moduleData],
   );
 
-  const loadEntries = async (targetPage = page) => {
+  const sortField = moduleData?.sort_field || "";
+  const sortDirection = moduleData?.sort_direction || "asc";
+  const sortType = useMemo(() => {
+    if (!sortField || sortField === "created_at") return "";
+    const field = fields.find((f) => f.name === sortField);
+    if (!field) return "";
+    if (field.type === "number") return "number";
+    if (field.type === "date") return "date";
+    return "";
+  }, [fields, sortField]);
+
+  const loadEntries = useCallback(async (targetPage = page) => {
     if (!moduleId) return;
     try {
       const res = await fetch(
-        `/api/module_entries.php?module_id=${moduleId}&page=${targetPage}&limit=${PAGE_SIZE}`,
+        `/api/module_entries.php?module_id=${moduleId}&page=${targetPage}&limit=${PAGE_SIZE}&sort_field=${encodeURIComponent(sortField)}&sort_direction=${encodeURIComponent(sortDirection)}&sort_type=${encodeURIComponent(sortType)}`,
       );
       const data = await res.json();
       if (data.status === "success") {
@@ -75,11 +86,11 @@ const ModuleEntries = ({ modules = [], showToast }) => {
     } catch {
       // ignore
     }
-  };
+  }, [moduleId, page, sortField, sortDirection, sortType]);
 
   useEffect(() => {
     loadEntries(page);
-  }, [moduleId, page]);
+  }, [loadEntries, page]);
 
   useEffect(() => {
     setEntryValues(emptyValuesFromFields(fields));
