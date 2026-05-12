@@ -83,10 +83,10 @@ export default function Header({ themeSettings }) {
     setIsMobileMenuOpen(false);
   };
 
-  const renderDesktopNavLinks = (extraClass = "") => (
+  const renderDesktopNavLinks = (extraClass = "", layoutClass = "justify-end flex-1 h-full") => (
     <nav
       aria-label="Navigasi utama"
-      className={`hidden lg:flex items-center h-full gap-4 font-semibold text-sm justify-end flex-1 ${extraClass}`}
+      className={`hidden lg:flex items-center gap-4 font-semibold text-sm ${layoutClass} ${extraClass}`}
     >
       {navItems.map((item) => {
         if (item.type === 'dropdown') {
@@ -191,11 +191,12 @@ export default function Header({ themeSettings }) {
           <div className="flex items-center justify-center">
             {renderLogoBlock()}
           </div>
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              {renderDesktopNavLinks("pr-6 lg:pr-10")}
+          <div className="flex w-full items-center justify-end lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+            <div className="hidden lg:block" />
+            {renderDesktopNavLinks("justify-self-center px-6 lg:px-10", "justify-center h-auto")}
+            <div className="flex justify-end justify-self-end">
+              {renderActionBlock()}
             </div>
-            {renderActionBlock()}
           </div>
         </div>
       ) : (
