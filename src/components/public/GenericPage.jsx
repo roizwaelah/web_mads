@@ -420,7 +420,7 @@ export default function GenericPage({ pages = [], gurus = [] }) {
               <tr key={entry.id}>
                 {fields.map((field) => (
                   <td key={field.name} className="p-3 text-gray-600">
-                    {entry.data?.[field.name] || "-"}
+                    <span style={textStyleForField(field)}>{entry.data?.[field.name] || "-"}</span>
                   </td>
                 ))}
               </tr>
@@ -429,6 +429,40 @@ export default function GenericPage({ pages = [], gurus = [] }) {
         </table>
       </div>
     );
+
+    const looksLikeImage = (value = "") =>
+      /\.(png|jpe?g|gif|webp|svg)$/i.test((value || "").toString().trim());
+    const parseFieldOptions = (rawOptions) => {
+      if (!rawOptions) return {};
+      if (typeof rawOptions === "object") return rawOptions;
+      try {
+        const parsed = JSON.parse(rawOptions);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch {
+        return {};
+      }
+    };
+    const textStyleForField = (field) => {
+      const opts = parseFieldOptions(field?.options);
+      const style = {};
+      if (opts.fontSize) style.fontSize = `${opts.fontSize}px`;
+      if (opts.fontWeight) style.fontWeight = opts.fontWeight;
+      if (opts.color) style.color = opts.color;
+      return style;
+    };
+    const pickField = (items = [], keys = []) => {
+      for (const key of keys) {
+        const found = items.find((f) => (f.name || "").toLowerCase().includes(key));
+        if (found) return found;
+      }
+      return null;
+    };
+    const imageField =
+      fields.find((f) => f.type === "image") || pickField(fields, ["image", "gambar", "foto", "img"]);
+    const titleField = pickField(fields, ["title", "judul", "nama"]) || fields[0];
+    const descField =
+      fields.find((f) => f.type === "textarea") || pickField(fields, ["deskripsi", "keterangan", "ringkasan"]);
+    const linkField = fields.find((f) => f.type === "url") || pickField(fields, ["tautan", "url", "link"]);
 
     const renderCards = (isGrid, items) => {
       const cols = moduleConfig.grid_columns || 3;
@@ -443,14 +477,28 @@ export default function GenericPage({ pages = [], gurus = [] }) {
         <div className={`grid grid-cols-1 ${isGrid ? gridClass : "md:grid-cols-2"} gap-4 text-sm`}>
           {items.map((entry) => (
           <div key={entry.id} className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
-            {fields.map((field) => (
-              <div key={field.name} className="mb-2">
-                <div className="text-[11px] uppercase text-gray-400 font-semibold">
-                  {field.label}
-                </div>
-                <div className="text-gray-700">{entry.data?.[field.name] || "-"}</div>
+            {imageField && looksLikeImage(entry.data?.[imageField.name] || "") && (
+              <img
+                src={entry.data?.[imageField.name]}
+                alt={entry.data?.[titleField?.name] || titleField?.label || "Gambar"}
+                className="w-full h-40 object-cover rounded-lg mb-3 border border-gray-100"
+              />
+            )}
+            <div className="font-semibold text-gray-800 text-base mb-1">
+              <span style={textStyleForField(titleField)}>
+                {titleField ? entry.data?.[titleField.name] || "-" : "-"}
+              </span>
+            </div>
+            {descField && (
+              <div className="text-gray-600 mb-2" style={textStyleForField(descField)}>
+                {entry.data?.[descField.name] || "-"}
               </div>
-            ))}
+            )}
+            {linkField && entry.data?.[linkField.name] && (
+              <a href={entry.data?.[linkField.name]} target="_blank" rel="noreferrer" className="text-[#2271b1] font-semibold hover:underline">
+                Lihat Detail
+              </a>
+            )}
           </div>
           ))}
         </div>
@@ -460,15 +508,26 @@ export default function GenericPage({ pages = [], gurus = [] }) {
     const renderList = (items) => (
       <div className="space-y-4 text-sm">
         {items.map((entry) => (
-          <div key={entry.id} className="border border-gray-200 rounded-lg p-4">
-            {fields.map((field) => (
-              <div key={field.name} className="flex items-start gap-2 py-1">
-                <div className="w-32 text-[11px] uppercase text-gray-400 font-semibold">
-                  {field.label}
-                </div>
-                <div className="text-gray-700">{entry.data?.[field.name] || "-"}</div>
+          <div key={entry.id} className="border border-gray-200 rounded-lg p-4 flex gap-3">
+            {imageField && looksLikeImage(entry.data?.[imageField.name] || "") && (
+              <img
+                src={entry.data?.[imageField.name]}
+                alt={entry.data?.[titleField?.name] || titleField?.label || "Gambar"}
+                className="w-24 h-24 object-cover rounded-lg border border-gray-100 shrink-0"
+              />
+            )}
+            <div>
+              <div className="font-semibold text-gray-800 mb-1">
+                <span style={textStyleForField(titleField)}>
+                  {titleField ? entry.data?.[titleField.name] || "-" : "-"}
+                </span>
               </div>
-            ))}
+              {descField && (
+                <div className="text-gray-600" style={textStyleForField(descField)}>
+                  {entry.data?.[descField.name] || "-"}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

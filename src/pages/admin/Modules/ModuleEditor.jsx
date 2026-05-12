@@ -1,15 +1,6 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Database, Plus, Save } from "lucide-react";
-
-const DEFAULT_FIELD = () => ({
-  id: `field-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-  label: "Field Baru",
-  name: "field_baru",
-  type: "text",
-  required: false,
-  options: "",
-});
 
 const slugify = (value) =>
   (value || "")
@@ -27,6 +18,57 @@ const nameify = (value) =>
     .replace(/[^a-z0-9_]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
+const mkField = (field = {}) => ({
+  id: `field-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  label: field.label || "Field Baru",
+  name: field.name || nameify(field.label || "field_baru"),
+  type: field.type || "text",
+  required: Boolean(field.required),
+  options: field.options || "",
+});
+
+const parseFieldOptions = (rawOptions) => {
+  if (!rawOptions) return {};
+  if (typeof rawOptions === "object") return rawOptions;
+  try {
+    const parsed = JSON.parse(rawOptions);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const toFieldOptionsString = (obj) => {
+  try {
+    return JSON.stringify(obj || {});
+  } catch {
+    return "";
+  }
+};
+
+const TEMPLATE_FIELDS = {
+  table: [
+    { label: "Nama", name: "nama", type: "text", required: true },
+    { label: "Keterangan", name: "keterangan", type: "textarea" },
+  ],
+  card: [
+    { label: "Judul", name: "judul", type: "text", required: true },
+    { label: "Gambar", name: "gambar", type: "image" },
+    { label: "Deskripsi", name: "deskripsi", type: "textarea" },
+    { label: "Tautan", name: "tautan", type: "url" },
+  ],
+  grid: [
+    { label: "Judul", name: "judul", type: "text", required: true },
+    { label: "Gambar", name: "gambar", type: "image" },
+    { label: "Deskripsi Singkat", name: "deskripsi_singkat", type: "textarea" },
+  ],
+  list: [
+    { label: "Judul", name: "judul", type: "text", required: true },
+    { label: "Subjudul", name: "subjudul", type: "text" },
+    { label: "Deskripsi", name: "deskripsi", type: "textarea" },
+  ],
+};
+
 const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -34,11 +76,18 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
 
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [fields, setFields] = useState([DEFAULT_FIELD()]);
+  const [fields, setFields] = useState([mkField()]);
   const [displayType, setDisplayType] = useState("table");
   const [gridColumns, setGridColumns] = useState(3);
   const [sortField, setSortField] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  const applyDisplayTemplate = (type) => {
+    const template = TEMPLATE_FIELDS[type] || TEMPLATE_FIELDS.table;
+    setFields(template.map((f) => mkField(f)));
+    setSortField("");
+    setSortDirection("asc");
+  };
 
   useEffect(() => {
     if (editing) {
@@ -50,24 +99,27 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
       setSortDirection(editing.sort_direction || "asc");
       setFields(
         Array.isArray(editing.fields) && editing.fields.length > 0
-          ? editing.fields.map((f) => ({
-              id: f.id || `field-${Date.now()}-${Math.random()}`,
-              label: f.label || "",
-              name: f.name || nameify(f.label),
-              type: f.type || "text",
-              required: Boolean(f.required),
-              options: f.options || "",
-            }))
-          : [DEFAULT_FIELD()],
+          ? editing.fields.map((f) =>
+              mkField({
+                label: f.label || "",
+                name: f.name || nameify(f.label),
+                type: f.type || "text",
+                required: Boolean(f.required),
+                options: f.options || "",
+              }),
+            )
+          : (TEMPLATE_FIELDS[editing.display_type || "table"] || TEMPLATE_FIELDS.table).map((f) =>
+              mkField(f),
+            ),
       );
     } else {
       setTitle("");
       setSlug("");
-      setFields([DEFAULT_FIELD()]);
       setDisplayType("table");
       setGridColumns(3);
       setSortField("");
       setSortDirection("asc");
+      applyDisplayTemplate("table");
     }
   }, [editing, id]);
 
@@ -156,7 +208,11 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
             <label className="text-xs text-gray-500">Tampilan Publik</label>
             <select
               value={displayType}
-              onChange={(e) => setDisplayType(e.target.value)}
+              onChange={(e) => {
+                const nextType = e.target.value;
+                setDisplayType(nextType);
+                applyDisplayTemplate(nextType);
+              }}
               className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
             >
               <option value="table">Tabel</option>
@@ -204,8 +260,8 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
               className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
               disabled={!sortField}
             >
-              <option value="asc">A-Z / Lama â†’ Baru</option>
-              <option value="desc">Z-A / Baru â†’ Lama</option>
+              <option value="asc">A-Z / Lama ke Baru</option>
+              <option value="desc">Z-A / Baru ke Lama</option>
             </select>
           </div>
         </div>
@@ -216,30 +272,35 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
           <div>
             <div className="text-sm font-semibold text-gray-800">Field Module</div>
             <div className="text-xs text-gray-500">
-              Tentukan kolom data yang akan diisi admin.
+              Field otomatis menyesuaikan tampilan publik, bisa Anda kustom lagi.
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setFields((prev) => [...prev, DEFAULT_FIELD()])}
-            className="text-xs border border-gray-300 px-3 py-1 rounded bg-gray-50 hover:bg-gray-100 flex items-center gap-1"
-          >
-            <Plus className="w-3 h-3" /> Tambah Field
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => applyDisplayTemplate(displayType)}
+              className="text-xs border border-[#2271b1] text-[#2271b1] px-3 py-1 rounded bg-white hover:bg-[#2271b1] hover:text-white"
+            >
+              Reset Sesuai Tampilan
+            </button>
+            <button
+              type="button"
+              onClick={() => setFields((prev) => [...prev, mkField()])}
+              className="text-xs border border-gray-300 px-3 py-1 rounded bg-gray-50 hover:bg-gray-100 flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> Tambah Field
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3">
           {fields.map((field, idx) => (
             <div key={field.id} className="border border-gray-200 rounded-md p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-gray-500">
-                  Field #{idx + 1}
-                </span>
+                <span className="text-xs font-semibold text-gray-500">Field #{idx + 1}</span>
                 <button
                   type="button"
-                  onClick={() =>
-                    setFields((prev) => prev.filter((f) => f.id !== field.id))
-                  }
+                  onClick={() => setFields((prev) => prev.filter((f) => f.id !== field.id))}
                   className="text-xs text-red-500 hover:underline"
                 >
                   Hapus
@@ -253,13 +314,7 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
                   onChange={(e) =>
                     setFields((prev) =>
                       prev.map((f) =>
-                        f.id === field.id
-                          ? {
-                              ...f,
-                              label: e.target.value,
-                              name: f.name || nameify(e.target.value),
-                            }
-                          : f,
+                        f.id === field.id ? { ...f, label: e.target.value, name: f.name || nameify(e.target.value) } : f,
                       ),
                     )
                   }
@@ -271,9 +326,7 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
                   value={field.name}
                   onChange={(e) =>
                     setFields((prev) =>
-                      prev.map((f) =>
-                        f.id === field.id ? { ...f, name: e.target.value } : f,
-                      ),
+                      prev.map((f) => (f.id === field.id ? { ...f, name: e.target.value } : f)),
                     )
                   }
                   className="border border-gray-200 rounded px-3 py-2 text-sm"
@@ -282,9 +335,7 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
                   value={field.type}
                   onChange={(e) =>
                     setFields((prev) =>
-                      prev.map((f) =>
-                        f.id === field.id ? { ...f, type: e.target.value } : f,
-                      ),
+                      prev.map((f) => (f.id === field.id ? { ...f, type: e.target.value } : f)),
                     )
                   }
                   className="border border-gray-200 rounded px-3 py-2 text-sm"
@@ -295,6 +346,8 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
                   <option value="email">Email</option>
                   <option value="tel">Telepon</option>
                   <option value="date">Tanggal</option>
+                  <option value="url">URL</option>
+                  <option value="image">Gambar (URL)</option>
                   <option value="select">Select</option>
                 </select>
                 <label className="flex items-center gap-2 text-sm text-gray-600">
@@ -303,11 +356,7 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
                     checked={field.required}
                     onChange={(e) =>
                       setFields((prev) =>
-                        prev.map((f) =>
-                          f.id === field.id
-                            ? { ...f, required: e.target.checked }
-                            : f,
-                        ),
+                        prev.map((f) => (f.id === field.id ? { ...f, required: e.target.checked } : f)),
                       )
                     }
                   />
@@ -321,13 +370,79 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
                   value={field.options || ""}
                   onChange={(e) =>
                     setFields((prev) =>
-                      prev.map((f) =>
-                        f.id === field.id ? { ...f, options: e.target.value } : f,
-                      ),
+                      prev.map((f) => (f.id === field.id ? { ...f, options: e.target.value } : f)),
                     )
                   }
                   className="border border-gray-200 rounded px-3 py-2 text-sm mt-3 w-full"
                 />
+              )}
+              {(field.type === "text" || field.type === "textarea" || field.type === "number") && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                  <div>
+                    <label className="text-[11px] text-gray-500">Ukuran Teks (px)</label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="60"
+                      value={parseFieldOptions(field.options).fontSize || ""}
+                      onChange={(e) =>
+                        setFields((prev) =>
+                          prev.map((f) => {
+                            if (f.id !== field.id) return f;
+                            const current = parseFieldOptions(f.options);
+                            const next = {
+                              ...current,
+                              fontSize: e.target.value ? Number(e.target.value) : undefined,
+                            };
+                            if (!next.fontSize) delete next.fontSize;
+                            return { ...f, options: toFieldOptionsString(next) };
+                          }),
+                        )
+                      }
+                      className="border border-gray-200 rounded px-3 py-2 text-sm w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-gray-500">Style Teks</label>
+                    <select
+                      value={parseFieldOptions(field.options).fontWeight || "normal"}
+                      onChange={(e) =>
+                        setFields((prev) =>
+                          prev.map((f) => {
+                            if (f.id !== field.id) return f;
+                            const current = parseFieldOptions(f.options);
+                            const next = { ...current, fontWeight: e.target.value };
+                            return { ...f, options: toFieldOptionsString(next) };
+                          }),
+                        )
+                      }
+                      className="border border-gray-200 rounded px-3 py-2 text-sm w-full"
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="500">Medium</option>
+                      <option value="600">Semi Bold</option>
+                      <option value="700">Bold</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-gray-500">Warna Teks</label>
+                    <input
+                      type="color"
+                      value={parseFieldOptions(field.options).color || "#374151"}
+                      onChange={(e) =>
+                        setFields((prev) =>
+                          prev.map((f) => {
+                            if (f.id !== field.id) return f;
+                            const current = parseFieldOptions(f.options);
+                            const next = { ...current, color: e.target.value };
+                            return { ...f, options: toFieldOptionsString(next) };
+                          }),
+                        )
+                      }
+                      className="border border-gray-200 rounded h-[42px] w-full"
+                    />
+                  </div>
+                </div>
               )}
             </div>
           ))}
@@ -338,4 +453,3 @@ const ModuleEditor = ({ modules = [], setModules = () => {}, showToast }) => {
 };
 
 export default ModuleEditor;
-

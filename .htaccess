@@ -49,11 +49,16 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Never rewrite static asset requests to HTML fallback.
+    # Missing assets must stay 404, otherwise module scripts return text/html.
+    RewriteCond %{REQUEST_URI} \.(?:js|mjs|css|map|json|png|jpe?g|webp|gif|svg|ico|woff2?|ttf|eot)$ [NC]
+    RewriteRule ^ - [L]
+
     # Allow existing files/directories directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Fallback to index.html for client-side routes
-    RewriteRule . /index.html [L]
+    # Fallback to API share-meta renderer so crawlers get route-specific OG tags
+    RewriteRule ^(.*)$ /api/share-meta.php?path=/$1 [L,QSA]
 </IfModule>
